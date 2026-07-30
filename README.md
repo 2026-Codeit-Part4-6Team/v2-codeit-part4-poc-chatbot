@@ -91,7 +91,7 @@ cd ../frontend && BACKEND_URL=http://localhost:8000 streamlit run streamlit_app.
 ---
 
 ## 실서비스 확장 슬롯(인터페이스 유지 교체 지점)
-- 주의사항: 네이버지도 API의 경우 리뷰 데이터 직접 가져오기 불가. 하여 웹 크롤링/스크래핑 방식으로 셀레니움(Selenium) 등의 도구 사용하여 네이버 플레이스 페이지에서 공개된 리뷰 데이터를 우회적으로 수집 가능 여부 추가 확인 필요
+- 주의사항: 네이버지도 API의 경우 리뷰 데이터 직접 가져오기 불가. 추후 팀 고급 프로젝트 진행 시 웹 크롤링/스크래핑 방식으로 셀레니움(Selenium) 등의 도구 사용하여 네이버 플레이스 페이지에서 공개된 리뷰 데이터를 우회적으로 수집 가능 여부 추가 확인 필요
 - `retrieval.py` → FAISS/Chroma
 - `nodes/image_gen.py` → 팀 `backend_image_generator.py`(SDXL RealVisXL+IP-Adapter)
 - `nodes/context.py` 경쟁사 → 상권정보 OpenAPI + 네이버지도 API
