@@ -1,0 +1,15 @@
+# AdCopilot 백엔드 (FastAPI + LangGraph). DB는 표준 sqlite3라 설치 불필요.
+# ⚠ 강의 예제(task-manager)와 다른 점:
+#   · sqlalchemy 미사용  → 우리 요구사항이 sqlite3 표준 라이브러리만 쓰기 때문
+#   · onnxruntime/numpy 미사용 → 이미지가 ONNX 추론이 아니라 PIL 카드 렌더라서
+#   · requests 미사용 → 네이버 데이터랩 호출을 urllib(표준)로 처리
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+pyyaml
+openai>=1.0
+langgraph
+langchain-core
+pillow
+# 실제 SDXL 이미지 생성으로 교체 시: torch, diffusers, rembg 등 추가

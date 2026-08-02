@@ -1,0 +1,17 @@
+# ── LLM ──
+llm_model: "gpt-5-mini"          # 프로젝트 허용 모델 (gpt-5-mini / gpt-5-nano)
+embedding_model: "text-embedding-3-small"
+
+# ── Agentic RAG ──
+top_k: 3                          # 벤치마크 KB 검색 상위 k
+max_variants: 3                   # 카피 배리언트 개수(3안)
+quality_threshold: 7.0            # LLM Judge 통과 점수(10점 만점)
+max_regen: 2                      # 품질 미달 시 재생성 최대 횟수(agentic 루프)
+
+# ── 컨텍스트 수집 노드 on/off (체크박스 라우터 기본값) ──
+use_trend: true                   # 네이버 데이터랩 트렌드 [전민재]
+use_competitor: true              # 경쟁사 리뷰 요약 [윤승준]
+use_benchmark: true               # 업종 벤치마크 RAG [김재헌]
+
+# ── 대화 메모리 ──
+max_history: 6
