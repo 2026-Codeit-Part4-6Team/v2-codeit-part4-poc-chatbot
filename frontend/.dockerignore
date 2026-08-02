@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.env
+# Streamlit Cloud 배포 시 쓰는 시크릿은 이미지에 넣지 않는다
+.streamlit/secrets.toml
