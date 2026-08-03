@@ -43,7 +43,7 @@ app.add_middleware(
 # 파일시스템을 볼 수 없다. 그래서 백엔드가 /static/xxx.png 로 이미지를 URL 서빙하고,
 # /generate 응답에 절대경로(image_path) 대신 절대 URL(image_url)을 함께 실어 보낸다.
 # Cloud Run 컨테이너 파일시스템은 휘발성이므로 쓰기 가능한 /tmp 하위에 둔다.
-_STATIC_DIR = os.getenv("STATIC_DIR", "/tmp/v2-poc-chatbot-api_output")
+_STATIC_DIR = os.getenv("STATIC_DIR", "/tmp/adcopilot_output")
 os.makedirs(_STATIC_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
 
@@ -177,16 +177,9 @@ def generate(req: GenerateReq, request: Request, _=Depends(verify_api_key)):
         industry=user["industry"], store_name=user["store_name"], config=cfg,
     )
 
-    # ── 이미지 경로 → 공개 URL 변환 ──
-    # 파이프라인은 이미지 파일의 서버 절대경로(image_path)를 반환한다.
-    # 분리 배포에서는 프론트가 그 경로에 접근할 수 없으므로, 파일명만 뽑아
-    # /static/<파일명> 형태의 절대 URL(image_url)을 응답에 추가한다.
-    img_path = result.get("image_path", "")
-    if img_path:
-        fname = os.path.basename(img_path)
-        # PUBLIC_BASE_URL 이 있으면 그걸 쓰고(권장), 없으면 요청 헤더 기반으로 유추.
-        base = os.getenv("PUBLIC_BASE_URL", "").rstrip("/") or str(request.base_url).rstrip("/")
-        result["image_url"] = f"{base}/static/{fname}"
+    # 이미지는 파이프라인이 이미 image_b64(문자열)로 반환. 프론트가 base64 디코드해서
+    # st.image 에 bytes 로 전달한다. Cloud Run 파일시스템 이슈 원천 차단을 위해
+    # 파일 저장·URL 서빙 방식을 폐기하고 인라인 응답으로 통일.
 
     # 반문(꼬리질문)이면 생성 로그를 남기지 않고 그대로 반환
     if result["is_clarification"]:

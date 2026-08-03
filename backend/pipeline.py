@@ -48,6 +48,7 @@ def get_ai_response(question: str, history: list[dict] = None,
     return {
         "answer": result.get("answer", ""),
         "image_path": result.get("image_path", ""),
+        "image_b64": result.get("image_b64", ""),
         "best_copy": result.get("best_copy", ""),
         "best_score": result.get("best_score", 0.0),
         "rank_reason": result.get("rank_reason", ""),

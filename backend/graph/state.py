@@ -35,6 +35,7 @@ class GraphState(TypedDict, total=False):
 
     # ── image / channel 산출 ──
     image_path: str
+    image_b64: str
     channel: str
 
     # ── 최종 ──
