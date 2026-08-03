@@ -43,7 +43,7 @@ app.add_middleware(
 # 파일시스템을 볼 수 없다. 그래서 백엔드가 /static/xxx.png 로 이미지를 URL 서빙하고,
 # /generate 응답에 절대경로(image_path) 대신 절대 URL(image_url)을 함께 실어 보낸다.
 # Cloud Run 컨테이너 파일시스템은 휘발성이므로 쓰기 가능한 /tmp 하위에 둔다.
-_STATIC_DIR = os.getenv("STATIC_DIR", "/tmp/adcopilot_output")
+_STATIC_DIR = os.getenv("STATIC_DIR", "/tmp/v2-poc-chatbot-api_output")
 os.makedirs(_STATIC_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
 
