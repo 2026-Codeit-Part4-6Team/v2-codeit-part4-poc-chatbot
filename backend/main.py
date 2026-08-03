@@ -17,8 +17,9 @@ main.py — FastAPI 백엔드 (파트4-3 Ch8 CORS/API키 + Ch10 라우팅 패턴
 
 DB는 sqlite3(db.py)만 사용. 유료 생성은 크레딧을 차감하고 결제/생성 로그를 남긴다.
 """
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -36,6 +37,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── 유료 생성 이미지를 HTTP 로 서빙 ────────────────────────────────────────────
+# 분리 배포(Cloud Run 백엔드 ↔ Streamlit Cloud 프론트)에서는 프론트가 백엔드의
+# 파일시스템을 볼 수 없다. 그래서 백엔드가 /static/xxx.png 로 이미지를 URL 서빙하고,
+# /generate 응답에 절대경로(image_path) 대신 절대 URL(image_url)을 함께 실어 보낸다.
+# Cloud Run 컨테이너 파일시스템은 휘발성이므로 쓰기 가능한 /tmp 하위에 둔다.
+_STATIC_DIR = os.getenv("STATIC_DIR", "/tmp/adcopilot_output")
+os.makedirs(_STATIC_DIR, exist_ok=True)
+app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
 
 # API 키 인증(파트4-3 Ch8). 환경변수 API_KEYS(콤마구분). 없으면 인증 비활성(개발 편의).
 _api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -147,7 +157,7 @@ def payments(user_id: int, _=Depends(verify_api_key)):
 
 # ── Generate (파이프라인 호출) ──
 @app.post("/generate")
-def generate(req: GenerateReq, _=Depends(verify_api_key)):
+def generate(req: GenerateReq, request: Request, _=Depends(verify_api_key)):
     user = db.get_user_by_id(req.user_id)
     if not user:
         raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다")
@@ -166,6 +176,17 @@ def generate(req: GenerateReq, _=Depends(verify_api_key)):
         req.question, history=req.history,
         industry=user["industry"], store_name=user["store_name"], config=cfg,
     )
+
+    # ── 이미지 경로 → 공개 URL 변환 ──
+    # 파이프라인은 이미지 파일의 서버 절대경로(image_path)를 반환한다.
+    # 분리 배포에서는 프론트가 그 경로에 접근할 수 없으므로, 파일명만 뽑아
+    # /static/<파일명> 형태의 절대 URL(image_url)을 응답에 추가한다.
+    img_path = result.get("image_path", "")
+    if img_path:
+        fname = os.path.basename(img_path)
+        # PUBLIC_BASE_URL 이 있으면 그걸 쓰고(권장), 없으면 요청 헤더 기반으로 유추.
+        base = os.getenv("PUBLIC_BASE_URL", "").rstrip("/") or str(request.base_url).rstrip("/")
+        result["image_url"] = f"{base}/static/{fname}"
 
     # 반문(꼬리질문)이면 생성 로그를 남기지 않고 그대로 반환
     if result["is_clarification"]:
