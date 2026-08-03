@@ -22,6 +22,7 @@ st.set_page_config(page_title="AdCopilot — 소상공인 광고 생성", page_i
 
 def api(method, path, **kw):
     try:
+        # r = requests.request(method, f"{API_URL}{path}", headers=HEADERS, timeout=60, **kw)
         r = requests.request(method, f"{API_URL}{path}", headers=HEADERS, timeout=180, **kw)
         return r.status_code, r.json()
     except requests.exceptions.RequestException as e:
@@ -129,11 +130,29 @@ def _render_result(code, res):
         st.write(res["answer"])
         st.session_state.history.append({"role": "assistant", "content": res["answer"]})
 
-        # 분리 배포에서는 백엔드가 반환한 image_url(HTTP)만 사용해야 한다.
-        # image_path(서버 파일시스템 절대경로)는 로컬 docker-compose 에서만 유효.
-        img_src = res.get("image_url") or res.get("image_path")
-        if img_src:
-            st.image(img_src, caption="생성된 광고 이미지(유료)", use_column_width=True)
+        # 이미지 렌더 — Streamlit 의 st.image(URL) 은 서버가 URL 을 재-fetch 해서
+        # 미디어 매니저에 캐싱하는데, 이 과정에서 헤더/타임아웃/mimetype 불일치로
+        # MediaFileStorageError 로 폭발하는 사례가 있다.
+        # → 우리가 requests 로 직접 bytes 를 받아 st.image 에 bytes 를 넘기면
+        #    Streamlit 은 URL 파싱 자체를 하지 않아 이 문제가 원천 차단된다.
+        img_src = res.get("image_url")
+        if img_src and isinstance(img_src, str) and img_src.startswith(("http://", "https://")):
+            try:
+                # _r = requests.get(img_src, headers=HEADERS, timeout=30)
+                _r = requests.get(img_src, headers=HEADERS, timeout=180)
+                _r.raise_for_status()
+                st.image(_r.content, caption="생성된 광고 이미지(유료)", use_column_width=True)
+            except Exception as _e:
+                st.warning(f"이미지 로드 실패: {_e}")
+                st.caption(f"직접 열기 → {img_src}")
+        elif res.get("image_path"):
+            # 백엔드가 아직 image_url 을 반환하지 않는 옛 버전이면 여기로 들어옴.
+            st.warning(
+                "응답에 image_url 이 없습니다. 백엔드가 이전 버전일 수 있어요. "
+                "백엔드 재배포(image_url 반환) 후 다시 시도해 주세요."
+            )
+            with st.expander("응답 디버그"):
+                st.json({"image_url": res.get("image_url"), "image_path": res.get("image_path")})
 
         # 대안(배리언트) 노출 — 조희원 '다른 안 제시'
         if res.get("variants"):
