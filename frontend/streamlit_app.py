@@ -22,7 +22,8 @@ st.set_page_config(page_title="AdCopilot — 소상공인 광고 생성", page_i
 
 def api(method, path, **kw):
     try:
-        r = requests.request(method, f"{API_URL}{path}", headers=HEADERS, timeout=60, **kw)
+        # r = requests.request(method, f"{API_URL}{path}", headers=HEADERS, timeout=60, **kw)
+        r = requests.request(method, f"{API_URL}{path}", headers=HEADERS, timeout=180, **kw)
         return r.status_code, r.json()
     except requests.exceptions.RequestException as e:
         return 0, {"detail": f"백엔드 연결 실패: {e}"}
@@ -143,7 +144,8 @@ def _render_result(code, res):
                 st.warning(f"이미지 디코드 실패: {_e}")
         elif img_url and isinstance(img_url, str) and img_url.startswith(("http://", "https://")):
             try:
-                _r = requests.get(img_url, headers=HEADERS, timeout=30)
+                # _r = requests.get(img_url, headers=HEADERS, timeout=30)
+                _r = requests.get(img_url, headers=HEADERS, timeout=180)
                 _r.raise_for_status()
                 st.image(_r.content, caption="생성된 광고 이미지(유료)", use_column_width=True)
             except Exception as _e:
