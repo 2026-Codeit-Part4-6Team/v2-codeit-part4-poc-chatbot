@@ -22,7 +22,8 @@ st.set_page_config(page_title="AdCopilot — 소상공인 광고 생성", page_i
 
 def api(method, path, **kw):
     try:
-        r = requests.request(method, f"{API_URL}{path}", headers=HEADERS, timeout=60, **kw)
+        # r = requests.request(method, f"{API_URL}{path}", headers=HEADERS, timeout=60, **kw)
+        r = requests.request(method, f"{API_URL}{path}", headers=HEADERS, timeout=180, **kw)
         return r.status_code, r.json()
     except requests.exceptions.RequestException as e:
         return 0, {"detail": f"백엔드 연결 실패: {e}"}
