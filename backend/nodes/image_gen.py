@@ -13,7 +13,7 @@ from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 
 # 이미지 저장 위치: 배포 환경(Cloud Run) 에서는 STATIC_DIR 환경변수로 지정한
-# 쓰기 가능한 경로(/tmp/adcopilot_output)를 사용한다. 로컬 개발에서는 프로젝트
+# 쓰기 가능한 경로(/tmp/v2-poc-chatbot-api_output)를 사용한다. 로컬 개발에서는 프로젝트
 # 루트 output/ 로 폴백. main.py 가 이 경로를 /static 으로 mount 해 URL 서빙한다.
 _OUT_DIR = os.getenv(
     "STATIC_DIR",
