@@ -22,7 +22,6 @@ st.set_page_config(page_title="AdCopilot — 소상공인 광고 생성", page_i
 
 def api(method, path, **kw):
     try:
-        # r = requests.request(method, f"{API_URL}{path}", headers=HEADERS, timeout=60, **kw)
         r = requests.request(method, f"{API_URL}{path}", headers=HEADERS, timeout=180, **kw)
         return r.status_code, r.json()
     except requests.exceptions.RequestException as e:
@@ -130,8 +129,11 @@ def _render_result(code, res):
         st.write(res["answer"])
         st.session_state.history.append({"role": "assistant", "content": res["answer"]})
 
-        if res.get("image_path"):
-            st.image(res["image_path"], caption="생성된 광고 이미지(유료)", use_column_width=True)
+        # 분리 배포에서는 백엔드가 반환한 image_url(HTTP)만 사용해야 한다.
+        # image_path(서버 파일시스템 절대경로)는 로컬 docker-compose 에서만 유효.
+        img_src = res.get("image_url") or res.get("image_path")
+        if img_src:
+            st.image(img_src, caption="생성된 광고 이미지(유료)", use_column_width=True)
 
         # 대안(배리언트) 노출 — 조희원 '다른 안 제시'
         if res.get("variants"):
