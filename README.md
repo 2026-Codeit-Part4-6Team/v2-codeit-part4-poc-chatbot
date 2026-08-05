@@ -45,8 +45,19 @@ adcopilot/
 
 ## 참고 자료
 
-### 네이버 데이터랩
-- OpenAPI 네이버 통합 검색어 트렌드 조회 명세서 — [바로 가기](https://developers.naver.com/docs/serviceapi/datalab/search/search.md#%EB%84%A4%EC%9D%B4%EB%B2%84-%ED%86%B5%ED%95%A9-%EA%B2%80%EC%83%89%EC%96%B4-%ED%8A%B8%EB%A0%8C%EB%93%9C-%EC%A1%B0%ED%9A%8C)
+### 네이버 클라우드 플랫폼
+#### 주의사항: 무료 사용량은 존재하나 회원 가입 시 결제수단(카드) 등록 필요.
+#### NAVER API HUB - 검색어 트렌드 조회
+- 네이버 데이터랩 검색 API, 검색어 트렌드, 쇼핑 인사이트 서비스 종료 및 NAVER API HUB 이관 안내 - [바로가기](https://developers.naver.com/notice/article/32530)
+
+- NAVER API HUB 개요 - [바로가기](https://api.ncloud-docs.com/docs/naver-api-hub-overview)
+
+- 검색어 트렌드 조회 명세서 — [바로 가기](https://api.ncloud-docs.com/docs/naver-api-hub-search-trend)
+
+#### NAVER Maps - 지오코딩
+- Maps 개요 - [바로가기](https://api.ncloud-docs.com/docs/application-maps-overview)
+
+- Geocoding 조회 명세서 — [바로 가기](https://api.ncloud-docs.com/docs/application-maps-geocoding)
 
 ### 소상공인시장진흥공단
 - OpenAPI 반경내 상가업소 조회 명세서 — <a href="https://2026-codeit-part4-6team.github.io/codeit-part4-poc-chatbot/소상공인시장진흥공단_상가(상권)정보_storeListInRadius_OpenApi.pdf">바로 가기</a>
