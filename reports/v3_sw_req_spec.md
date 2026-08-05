@@ -67,7 +67,7 @@
 - **확장성**: 노드 기반 구조로 신규 노드 추가 용이.
 - **모니터링**: 구조화 로그 필수. GPU 사용량(nvidia-smi) 주기 확인. Prometheus/Grafana는 [확장].
 
-## 5. 데이터 요구사항 (DB: SQLite3)
+## 5. 데이터 요구사항 (DB: SQLAlchemy, SQLite3)
 
 ### users
 | 컬럼 | 타입 | 설명 |
@@ -75,13 +75,13 @@
 | id | INTEGER PK AUTOINCREMENT | 사용자 ID |
 | username | TEXT UNIQUE NOT NULL | 사용자 이름 |
 | email | TEXT UNIQUE | 로그인 아이디 |
-| password_hash | TEXT NOT NULL | 비밀번호 해시(**팀 통일**: 현행 POC=SHA-256+hmac / 권장=bcrypt) |
+| password_hash | TEXT NOT NULL | 비밀번호 해시(**구현 방식 팀 통일 필요**: 현행 POC=SHA-256+hmac / 권장=bcrypt) |
 | business_name | TEXT | 가게명 |
 | business_type | TEXT | 업종(상권·트렌드에 사용) |
-| lat | REAL | 위도(카카오 지오코딩 결과) |
+| lat | REAL | 위도(상권 API용, 지오코딩 결과 저장) |
 | lng | REAL | 경도 |
 | address | TEXT | 원본 주소 |
-| credits | INTEGER DEFAULT 0 | 보유 크레딧 |
+| credits | INTEGER DEFAULT 0 | 보유 크레딧(유료 차감 대상) |
 | is_admin | BOOLEAN DEFAULT FALSE | 관리자 여부 |
 | created_at | DATETIME NOT NULL | 가입일시 |
 
@@ -93,19 +93,20 @@
 | amount | INTEGER NOT NULL | 결제 금액(원) |
 | credits | INTEGER NOT NULL | 충전된 크레딧 수 |
 | method | TEXT DEFAULT 'mock' | 결제수단(POC=mock) |
-| status | TEXT DEFAULT 'paid' | pending/paid/refunded/failed |
+| status | TEXT DEFAULT 'paid' | pending/refunded/completed/failed |
 | created_at | DATETIME NOT NULL | 결제 일시 |
 
-### generations
+### generations  (※ v1의 content/contents 명칭 혼용 → generations 통일)
 | 컬럼 | 타입 | 설명 |
 | --- | --- | --- |
 | id | INTEGER PK AUTOINCREMENT | 생성물 ID |
 | user_id | INTEGER NOT NULL FK→users.id | 요청자 |
 | question | TEXT | 사용자 요청 |
-| type | TEXT DEFAULT 'copy' | 'copy' / 'copy+image' |
+| type | TEXT DEFAULT 'copy(카피)' | 'copy(카피)'/'copy+image(카피+이미지)' |
 | platform | TEXT | instagram/blog/banner |
 | copy_content | TEXT | 생성 문구 |
-| image_b64 | TEXT nullable | 유료 이미지(base64 인라인) |
+| image_path | TEXT | 생성 이미지 경로(유료) |
+| image_b64 | TEXT nullable | 유료 이미지(**base64 인라인**, 파일경로/URL 아님) |
 | plan | TEXT | free/paid |
 | tokens_used | INTEGER DEFAULT 0 | 토큰 사용량 |
 | created_at | DATETIME NOT NULL | 생성 일시 |
