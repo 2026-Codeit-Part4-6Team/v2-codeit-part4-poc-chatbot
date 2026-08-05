@@ -102,7 +102,7 @@
 | id | INTEGER PK AUTOINCREMENT | 생성물 ID |
 | user_id | INTEGER NOT NULL FK→users.id | 요청자 |
 | question | TEXT | 사용자 요청 |
-| type | TEXT DEFAULT 'copy(카피)' | 'copy(카피)'/'copy+image(카피+이미지)' |
+| type | TEXT NOT NULL | 'copy+image(카피+이미지)'(필요 시 'copy(카피)'/ 추가) |
 | platform | TEXT | instagram/blog/banner |
 | copy_content | TEXT | 생성 문구 |
 | image_path | TEXT | 생성 이미지 경로(유료) |
