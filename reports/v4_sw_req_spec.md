@@ -156,4 +156,4 @@
 
 **추가 논의 사항**: (1) NCP 계정 만들어서 트렌드 HUB 키 발급 담당자 지정, (2) 카카오 REST 키 발급, (3) `password_hash` 방식 최종 통일(SHA-256 유지 vs bcrypt 전환).
 
-SDXL+Triton 구현 로드맵(diffusers 프로토타입 → ONNX 변환 → Triton 서빙)을 주차별 태스크로 쪼갠 표가 필요 시 AI 도구 활용. 
+SDXL+Triton 구현 로드맵(diffusers 프로토타입 → ONNX 변환 → Triton 서빙)을 주차별 태스크로 쪼갠 표가 필요 시 AI 도구 활용 예정.
