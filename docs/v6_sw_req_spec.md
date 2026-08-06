@@ -267,7 +267,7 @@
 | created_at | DATETIME | 등록 일시 |
 
 ### 5.1 데이터베이스 구조도 (ERD)
-![ERD](reports/erd_v6.png)
+![ERD](erd_v6.png)
 
 - **관계**: `users(1) ─ payments(N)`, `users(1) ─ generations(N)`
 - **독립 테이블**: `market_cache`, `review_cache`, `waiting_copies` (FK 없음, 캐시/프리로드 용도)
@@ -316,7 +316,7 @@
 
 ## 7. (v6 추가) 파이프라인
 
-![파이프라인](reports/pipeline_v6.png)
+![파이프라인](pipeline_v6.png)
 
 ```
 사용자 질문
