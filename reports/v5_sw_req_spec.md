@@ -138,15 +138,15 @@
     (`http://apis.data.go.kr/B553077/api/open/sdsc2/storeListInRadius`,
      좌표 기반, 반경≤2000m, 30tps, 페이지≤1000, xml/json,
      활용 필드: indsLclsNm/indsMclsNm/indsSclsNm, lon/lat, adongNm, totalCount)
-  - **NCP Maps Geocoding(주소→좌표)**: `https://maps.apigw.ntruss.com/map-geocode/v2/geocode`
+  - **네이버 클라우드 플랫폼 Maps Geocoding(주소→좌표)**: `https://maps.apigw.ntruss.com/map-geocode/v2/geocode`
     (헤더 `X-NCP-APIGW-API-KEY-ID`/`X-NCP-APIGW-API-KEY`, 무료 월 300만, JSON)
     → 검색어 트렌드와 동일 플랫폼(NCP)이라 키·인증 방식 통합 관리
-  - **네이버 데이터랩 검색어 트렌드 (NAVER API HUB)**
+  - **네이버 클라우드 플랫폼 검색어 트렌드 (NAVER API HUB)**
     (`https://naverapihub.apigw.ntruss.com/search-trend/v1/search`, 헤더 `X-NCP-APIGW-API-KEY-ID`/`X-NCP-APIGW-API-KEY`,
      ⚠️ 개발자센터(developers) 신규 발급 2026-07-31 종료 → **HUB로 발급**,
      현행 POC trend.py의 X-Naver-Client-* 헤더를 HUB 방식으로 수정 필요)
   - **OpenAI API**: 문구 생성·임베딩(gpt 계열, text-embedding-3-small)
-- **비용 관리**: NCP 결제수단 등록 필요(무료 한도 내 과금 없음). 
+- **비용 관리**: 네이버 클라우드 플랫폼 결제수단 등록 필요(무료 한도 내 과금 없음). 
 사용량 알림 설정, 지오코딩 결과 캐싱(market_cache 활용)으로 중복 호출 방지.
 - **내부 연동**: FastAPI ↔ Triton Inference Server(gRPC, 이미지 생성)
 - **정적 데이터(참고 KB)**: 업종분류(2302) xlsx, 주요상권현황 csv → 업종코드 매핑·상권명 참조
@@ -158,7 +158,7 @@
 
 > "우리가 하고 싶은 것(리뷰 크롤링, 실시간 반영)과 안정적으로 되는 것(공식 API 정량 분석)을 구분함. **라이브 시연 대상 기능은 MVP, 리스크 있는 것을 확장 항목** 분류함. 특히 외부 API의 경우 검색어 트렌드, 지오코딩은 네이버로 통합합니다. 이미지는 SDXL+Triton으로 가되, 품질부터 잡고 서빙 최적화를 나중에 붙이는 순서로."
 
-**추가 논의 사항**: (1) NCP 계정 만들어서 검색어 트렌드 HUB, 지오코딩 키 발급 담당자 지정, (2) `password_hash` 방식 최종 통일(SHA-256 유지 vs bcrypt 전환).
+**추가 논의 사항**: (1) 네이버 클라우드 플랫폼 계정 만들어서 검색어 트렌드 HUB, 지오코딩 키 발급 담당자 지정, (2) `password_hash` 방식 최종 통일(SHA-256 유지 vs bcrypt 전환).
 
 SDXL+Triton 구현 로드맵(diffusers 프로토타입 → ONNX 변환 → Triton 서빙)을 주차별 태스크로 쪼갠 표가 필요 시 AI 도구 활용 예정.
 
@@ -171,9 +171,18 @@ SDXL+Triton 구현 로드맵(diffusers 프로토타입 → ONNX 변환 → Trito
 
 - NAVER API HUB 개요 - [바로가기](https://api.ncloud-docs.com/docs/naver-api-hub-overview)
 
-- 검색어 트렌드 조회 명세서 — [바로 가기](https://api.ncloud-docs.com/docs/naver-api-hub-search-trend)
+- 검색어 트렌드 조회 명세서 — [바로가기](https://api.ncloud-docs.com/docs/naver-api-hub-search-trend)
 
 #### NAVER Maps - 지오코딩
 - Maps 개요 - [바로가기](https://api.ncloud-docs.com/docs/application-maps-overview)
 
-- Geocoding 조회 명세서 — [바로 가기](https://api.ncloud-docs.com/docs/application-maps-geocoding)
+- Geocoding 조회 명세서 — [바로가기](https://api.ncloud-docs.com/docs/application-maps-geocoding)
+
+### 소상공인시장진흥공단
+- OpenAPI 반경내 상가업소 조회 명세서 — [바로가기](https://2026-codeit-part4-6team.github.io/codeit-part4-poc-chatbot/소상공인시장진흥공단_상가(상권)정보_storeListInRadius_OpenApi.pdf)
+
+- OpenAPI 활용가이드 — [다운로드](https://raw.githubusercontent.com/2026-Codeit-Part4-6Team/codeit-part4-poc-chatbot/main/docs/%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8%EC%8B%9C%EC%9E%A5%EC%A7%84%ED%9D%A5%EA%B3%B5%EB%8B%A8_%EC%83%81%EA%B0%80%28%EC%83%81%EA%B6%8C%29%EC%A0%95%EB%B3%B4_OpenApi%20%ED%99%9C%EC%9A%A9%EA%B0%80%EC%9D%B4%EB%93%9C.hwp)
+
+- 업종분류(2302) 및 연계표 v1 — [다운로드](https://raw.githubusercontent.com/2026-Codeit-Part4-6Team/codeit-part4-poc-chatbot/main/docs/%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8%EC%8B%9C%EC%9E%A5%EC%A7%84%ED%9D%A5%EA%B3%B5%EB%8B%A8_%EC%83%81%EA%B0%80%28%EC%83%81%EA%B6%8C%29%EC%A0%95%EB%B3%B4_%EC%97%85%EC%A2%85%EB%B6%84%EB%A5%98%282302%29_%EB%B0%8F_%EC%97%B0%EA%B3%84%ED%91%9C_v1.xlsx)
+
+- 주요상권현황 — [다운로드](https://raw.githubusercontent.com/2026-Codeit-Part4-6Team/codeit-part4-poc-chatbot/main/docs/%EC%86%8C%EC%83%81%EA%B3%B5%EC%9D%B8%EC%8B%9C%EC%9E%A5%EC%A7%84%ED%9D%A5%EA%B3%B5%EB%8B%A8_%EC%A3%BC%EC%9A%94%EC%83%81%EA%B6%8C%ED%98%84%ED%99%A9_20240101.csv)
