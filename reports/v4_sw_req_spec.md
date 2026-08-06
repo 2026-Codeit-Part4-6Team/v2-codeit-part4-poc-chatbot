@@ -153,8 +153,24 @@
 
 ## 참고
 
-> "우리가 하고 싶은 것(리뷰 크롤링, 실시간 반영)과 안정적으로 되는 것(공식 API 정량 분석)을 구분했어요. **시연에서 확실히 되는 것을 MVP에, 리스크 있는 것을 확장에** 뒀습니다. 특히 네이버 트렌드는 HUB 이관이 강제라 선택지가 없고, 지오코딩은 카카오가 제일 편해서 정했어요. 이미지는 SDXL+Triton으로 가되, 품질부터 잡고 서빙 최적화를 나중에 붙이는 순서로."
+> "우리가 하고 싶은 것(리뷰 크롤링, 실시간 반영)과 안정적으로 되는 것(공식 API 정량 분석)을 구분함. **라이브 시연 대상 기능은 MVP, 리스크 있는 것을 확장 항목** 분류함. 특히 네이버 트렌드는 HUB 이관이 강제라 선택지가 없고, 지오코딩은 카카오가 제일 편해서 정했어요. 이미지는 SDXL+Triton으로 가되, 품질부터 잡고 서빙 최적화를 나중에 붙이는 순서로."
 
 **추가 논의 사항**: (1) NCP 계정 만들어서 트렌드 HUB 키 발급 담당자 지정, (2) 카카오 REST 키 발급, (3) `password_hash` 방식 최종 통일(SHA-256 유지 vs bcrypt 전환).
 
 SDXL+Triton 구현 로드맵(diffusers 프로토타입 → ONNX 변환 → Triton 서빙)을 주차별 태스크로 쪼갠 표가 필요 시 AI 도구 활용 예정.
+
+## 참고 자료
+
+### 네이버 클라우드 플랫폼
+#### 주의사항: 무료 사용량은 존재하나 회원 가입 시 결제수단(카드) 등록 필요.
+#### NAVER API HUB - 검색어 트렌드 조회
+- 네이버 데이터랩 검색 API, 검색어 트렌드, 쇼핑 인사이트 서비스 종료 및 NAVER API HUB 이관 안내 - [바로가기](https://developers.naver.com/notice/article/32530)
+
+- NAVER API HUB 개요 - [바로가기](https://api.ncloud-docs.com/docs/naver-api-hub-overview)
+
+- 검색어 트렌드 조회 명세서 — [바로 가기](https://api.ncloud-docs.com/docs/naver-api-hub-search-trend)
+
+#### NAVER Maps - 지오코딩
+- Maps 개요 - [바로가기](https://api.ncloud-docs.com/docs/application-maps-overview)
+
+- Geocoding 조회 명세서 — [바로 가기](https://api.ncloud-docs.com/docs/application-maps-geocoding)
