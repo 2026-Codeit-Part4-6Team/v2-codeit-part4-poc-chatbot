@@ -674,12 +674,12 @@ marketing-ai/
 ├── cache/                            # ★ 컨설턴트 챗봇 모델 개발 담당자가 관리 (1·2층) — 기본 챗봇(게시물 생성) 모델 개발 담당자는 import만
 │   ├── market_repo.py                # market_cache 적재 + get_market() 조회
 │   ├── review_repo.py                # review_cache 적재 + 조회 (기본 챗봇(게시물 생성) 모델 개발 담당자 미사용)
-│   └── trend_repo.py                 # 트렌드 API 호출 + get_trend() 조회 ← v1.5
+│   └── trend_repo.py                 # 트렌드 API 호출 + get_trend() 조회
 │                                     #   ★ D1에 mock 반환 스텁으로 먼저 커밋
 │
 ├── shared_data/                      # ★ 전민재 PM/컨설턴트 챗봇 모델 개발 담당자가 채우는 데이터 — 기본 챗봇(게시물 생성) 모델 개발 담당자는 읽기만
-│   ├── benchmark_kb.json             # 업종 벤치마크 KB 데이터 (전민재 PM/컨설턴트 작성) ← v1.5
-│   └── golden_dataset.json           # 골든 데이터셋 55문항 (전민재 PM 주도 작성) ← v1.5
+│   ├── benchmark_kb.json             # 업종 벤치마크 KB 데이터 (전민재 PM/컨설턴트 작성)
+│   └── golden_dataset.json           # 골든 데이터셋 55문항 (전민재 PM 주도 작성)
 │
 └── model_basic/                      # ★ 기본 챗봇(게시물 생성) 모델 개발 담당자 작업 영역 (기본 챗봇)
     ├── main.py                       # 챗봇 진입점 (서비스 개발 담당자가 호출)
@@ -696,7 +696,7 @@ marketing-ai/
     │   ├── extra_form.py             # 보조정보 폼 처리(선택사항)
     │   ├── channel.py                # 채널(플랫폼) 확정
     │   ├── market_for_copy.py        # 상권 카피용 요약(3층) — cache.get_market() 호출
-    │   ├── trend_for_copy.py         # 시즌·이슈 카피용 요약(3층) — cache.get_trend() 호출 ← v1.5
+    │   ├── trend_for_copy.py         # 시즌·이슈 카피용 요약(3층) — cache.get_trend() 호출
     │   ├── benchmark_node.py         # 업종 벤치마크 RAG 검색·요약(3층)
     │   ├── copy_gen.py               # ★ 광고 카피 생성 (가장 중요)
     │   ├── ranking.py                # 배리언트 랭킹(LLM Judge)
@@ -706,8 +706,8 @@ marketing-ai/
     │   ├── channel_format.py         # 채널별 리포맷
     │   ├── security_output.py        # 보안2 노드 — 전민재 PM의 check_output() 감싸기
     │   └── self_check_node.py        # self_check 노드 — 전민재 PM의 self_check() 감싸기
-    │   # ※ context_review.py 없음 — 경쟁사 리뷰는 컨설턴트 전담(v1.4)
-    │   # ※ context_trend.py 없음 — 트렌드 API 호출은 컨설턴트 전담(v1.5)
+    │   # ※ context_review.py 없음 — 경쟁사 리뷰는 컨설턴트 전담
+    │   # ※ context_trend.py 없음 — 트렌드 API 호출은 컨설턴트 전담
     │   # ★ 검증 노드 4개는 D2에 모두 연결 완료 — 전민재 PM이 스텁 내용만 채우면 자동 반영
     │
     ├── clients/                      # ★ 외부 연동부 (교체 가능하게 분리)
@@ -737,7 +737,7 @@ marketing-ai/
     │   ├── sdp_model_basic.md        # 본 문서
     │   ├── pipeline_basic_sdp.png    # 파이프라인 다이어그램
     │   ├── api_contract.md           # ★ 서비스 개발 담당자와의 API 계약서
-    │   └── prompt_tuning_log.md      # ★ 프롬프트 튜닝 실험 기록(D10) ← v1.5
+    │   └── prompt_tuning_log.md      # ★ 프롬프트 튜닝 실험 기록(D10)
     │
     ├── requirements.txt / pyproject.toml (uv)
     └── README.md
