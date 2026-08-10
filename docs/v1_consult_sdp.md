@@ -35,7 +35,7 @@
 
 ```
 [역할 ①] 데이터 공급자
-   market_repo · review_repo · trend_repo 의 1·2층(적재+조회함수)을 소유한다.
+   market_repo · review_repo · trend_repo 의 1·2층(적재+조회함수)을 관리한다.
    → 이 데이터는 컨설턴트 챗봇만 쓰는 게 아니라, 기본 챗봇(게시물 생성)도 함께 읽는다.
    → 즉 컨설턴트 챗봇 모델 개발 담당자가 늦으면 기본 챗봇 담당자가 멈춘다.
 
@@ -181,7 +181,7 @@ def get_market(lat, lng, radius=500) -> dict:
             "nearest_distance_m": 60, "industry_breakdown": {}}   # mock
 ```
 
-### 2.5 데이터 소유 분담 (팀 전체)
+### 2.5 데이터 관리 분담 (팀 전체)
 
 | 테이블/데이터 | 적재 담당 | 배분 근거 |
 | --- | --- | --- |
@@ -438,7 +438,7 @@ def get_market(lat, lng, radius=500) -> dict:
 - GCP VM(L4 GPU) — VSCode Remote-SSH로 접속 (팀 표준)
 - 코드 반영: **GitHub PR → main merge** (VM 직접 수정 금지 — 팀 원칙)
 - 브랜치: `feature/model-consult-*` 네이밍
-- **파일 소유권**: `cache/`·`graph/build_consultant.py`·`nodes/*_for_consult.py` 는 **컨설턴트 챗봇 모델 개발 담당자가 관리**,
+- **파일 관리권**: `cache/`·`graph/build_consultant.py`·`nodes/*_for_consult.py` 는 **컨설턴트 챗봇 모델 개발 담당자가 관리**,
   `validation/` 은 **PM**, `build_basic.py`·`nodes/*_for_copy.py` 는 **기본 챗봇 담당** → 머지 충돌 방지
 
 ### 5.4 ⚠️ API 예산·한도 관리
