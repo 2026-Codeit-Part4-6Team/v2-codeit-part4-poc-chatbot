@@ -596,7 +596,8 @@ def check_regulation(copy: str) -> dict:
 ### 7.2 전체 구조
 
 ```
-marketing-ai/
+(예시)
+sales-booster-ai/
 │
 ├── validation/                       # ★★ 전민재 PM 관리 — 두 챗봇 담당자는 import만
 │   ├── keywords.py                   # banned_keywords 로딩·대조 (공통 유틸)
