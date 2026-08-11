@@ -33,7 +33,7 @@
 
 ### 1.4 ★ PM 담당 업무 범위가 어떻게 정해졌나 (역산 도출)
 
-> 세 담당자 SDP(`sd_sdp.md`·`sdp_basic.md`·`sdp_consult.md`)개발 계획서 문서를 대조해
+> 세 담당자 SDP(`sdp_service.md`·`sdp_basic.md`·`sdp_consult.md`)개발 계획서 문서를 대조해
 > **다른 세 명이 하지 않는 업무**만 남긴 결과가 본 SDP의 업무 범위다.
 
 ```
@@ -841,10 +841,10 @@ marketing-ai/
 │   ├── sdp_consult.md                # [컨설턴트] 컨설턴트 챗봇 담당 SDP
 │   │
 │   ├── pipeline_sdp_pm.png           # [PM] 파이프라인 다이어그램
-│   ├── pipeline_sdp.png              # [서비스] 파이프라인 다이어그램
+│   ├── pipeline_sdp_service.png      # [서비스] 파이프라인 다이어그램
 │   ├── pipeline_sdp_basic.png        # [기본] 파이프라인 다이어그램
 │   ├── pipeline_sdp_consult.png      # [컨설턴트] 파이프라인 다이어그램
-│   ├── erd_sdp.png                   # [서비스] ERD 다이어그램
+│   ├── erd_sdp_service.png           # [서비스] ERD 다이어그램
 │   │
 │   ├── directory_structure.md        # ★ 본 통합 디렉토리 구조 (단일 소스)
 │   ├── api_contract.md               # ★ 서비스 ↔ 모델 API 계약서
@@ -1175,7 +1175,7 @@ models/consult/main.py    → models/shared/llm.py 사용
 - 요구사항 명세서 v10 (`v10_sw_req_spec.md`)
 - 추가 요구사항 (`add_sw_req_spec.md` / `add_sw_req_spec2.md` / `add_sw_req_spec3.md`)
 - 프로젝트 팁 (`project_tip.md`)
-- **서비스 개발 담당 SDP** (`sd_sdp.md`) — 테이블 DDL·수치 반영 대상
+- **서비스 개발 담당 SDP** (`sdp_service.md`) — 테이블 DDL·수치 반영 대상
 - **기본 챗봇 모델 개발 담당 SDP** (`sdp_basic.md`) — 검증 함수 4종 수요처
 - **컨설턴트 챗봇 모델 개발 담당 SDP** (`sdp_consult.md`) — 검증 함수 3종 수요처
 - 팀 통합 파이프라인 (`pipeline_v10.png`) · ERD (`erd_v10.png`)
