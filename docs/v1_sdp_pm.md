@@ -33,7 +33,7 @@
 
 ### 1.4 ★ PM 담당 업무 범위가 어떻게 정해졌나 (역산 도출)
 
-> 세 담당자 SDP(`sd_sdp.md`·`basic_sdp.md`·`consult_sdp.md`)개발 계획서 문서를 대조해
+> 세 담당자 SDP(`sd_sdp.md`·`sdp_basic.md`·`consult_sdp.md`)개발 계획서 문서를 대조해
 > **다른 세 명이 하지 않는 업무**만 남긴 결과가 본 SDP의 업무 범위다.
 
 ```
@@ -562,10 +562,9 @@ def check_regulation(copy: str) -> dict:
 
 ## 7. 프로젝트 디렉토리 구조
 
-> **초급자 기준으로 의도적으로 얕게** 구성했다.
-
 ```
-marketing-ai/
+(예시)
+sales-booster-ai/
 ├── validation/                       # ★★ 전민재 PM 관리 — 두 챗봇은 import만
 │   ├── keywords.py                   # banned_keywords 로딩·대조 (공통 유틸)
 │   ├── patterns.py                   # 인젝션 대표 패턴 · RISKY_HINTS(1단 필터)
@@ -852,7 +851,7 @@ marketing-ai/
 - 추가 요구사항 (`add_sw_req_spec.md` / `add_sw_req_spec2.md` / `add_sw_req_spec3.md`)
 - 프로젝트 팁 (`project_tip.md`)
 - **서비스 개발 담당 SDP** (`sd_sdp.md`) — 테이블 DDL·수치 반영 대상
-- **기본 챗봇 모델 개발 담당 SDP** (`basic_sdp.md`) — 검증 함수 4종 수요처
+- **기본 챗봇 모델 개발 담당 SDP** (`sdp_basic.md`) — 검증 함수 4종 수요처
 - **컨설턴트 챗봇 모델 개발 담당 SDP** (`consult_sdp.md`) — 검증 함수 3종 수요처
 - 팀 통합 파이프라인 (`pipeline_v10.png`) · ERD (`erd_v10.png`)
 - 파이프라인 다이어그램 (`pipeline_sdp_pm.png`)
