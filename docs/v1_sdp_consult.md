@@ -463,7 +463,7 @@ def get_market(lat, lng, radius=500) -> dict:
 ## 6. 시스템 설계
 
 ### 6.1 파이프라인 (컨설턴트 챗봇 모델 개발 관점)
-![파이프라인](images/pipeline_consult_sdp.png)
+![파이프라인](images/pipeline_sdp_consult.png)
 
 ```
 (예시)
@@ -692,8 +692,8 @@ marketing-ai/
     │   └── test_pipeline.py          # 그래프 E2E 테스트
     │
     ├── docs/
-    │   ├── sdp_model_consult.md      # 본 문서
-    │   ├── pipeline_consult_sdp.png  # 파이프라인 다이어그램
+    │   ├── sdp_consult.md            # 본 문서
+    │   ├── pipeline_sdp_consult.png  # 파이프라인 다이어그램
     │   ├── repo_contract.md          # ★ 조회 함수 시그니처(기본 챗봇 담당자용)
     │   └── prompt_tuning_log.md      # ★ 프롬프트 튜닝 실험 기록(D10)
     │
@@ -871,6 +871,6 @@ marketing-ai/
 - **기본 챗봇 담당 SDP** (`basic_sdp.md`) — 조회 함수 수요처
 - **서비스 개발 담당 SDP** (`sd_sdp.md`) — API 계약 상대 · 캐시 테이블 DDL · 지오코딩
 - 소상공인시장진흥공단 상권정보 OpenAPI 명세 (`storeListInRadius`)
-- 파이프라인 다이어그램 (`pipeline_consult_sdp.png`)
+- 파이프라인 다이어그램 (`pipeline_sdp_consult.png`)
 - 조회 함수 계약서 (`docs/repo_contract.md` — D1 작성 예정)
 - 프롬프트 튜닝 기록 (`docs/prompt_tuning_log.md` — D10 작성 예정)

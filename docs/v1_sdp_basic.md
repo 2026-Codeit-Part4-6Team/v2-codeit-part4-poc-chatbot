@@ -482,7 +482,7 @@ def get_trend(keyword: str, industry: str = None) -> dict:
 ## 6. 시스템 설계
 
 ### 6.1 파이프라인 (기본 챗봇 모델 개발 관점)
-![파이프라인](images/pipeline_basic_sdp.png)
+![파이프라인](images/pipeline_sdp_basic.png)
 
 ```
 (예시)
@@ -734,8 +734,8 @@ marketing-ai/
     │   # ※ test_regulation.py(검증 함수 단위 테스트)는 전민재 PM 영역
     │
     ├── docs/
-    │   ├── sdp_model_basic.md        # 본 문서
-    │   ├── pipeline_basic_sdp.png    # 파이프라인 다이어그램
+    │   ├── sdp_basic.md        # 본 문서
+    │   ├── pipeline_sdp_basic.png    # 파이프라인 다이어그램
     │   ├── api_contract.md           # ★ 서비스 개발 담당자와의 API 계약서
     │   └── prompt_tuning_log.md      # ★ 프롬프트 튜닝 실험 기록(D10)
     │
@@ -916,6 +916,6 @@ marketing-ai/
 - 팀 통합 파이프라인 (`pipeline_v10.png`)
 - 데이터베이스 구조도 (`erd_v10.png`)
 - 서비스 개발 담당 SDP (API 계약 상대 문서)
-- 파이프라인 다이어그램 (`pipeline_basic_sdp.png`)
+- 파이프라인 다이어그램 (`pipeline_sdp_basic.png`)
 - API 계약서 (`docs/api_contract.md` — D1 작성 예정)
 - 프롬프트 튜닝 기록 (`docs/prompt_tuning_log.md` — D10 작성 예정)

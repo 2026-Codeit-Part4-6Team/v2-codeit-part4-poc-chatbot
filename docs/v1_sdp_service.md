@@ -193,7 +193,7 @@ Mock을 쓰면 **첫날부터 마지막 날까지 개발 계획서 대로 작업
 ## 6. 시스템 설계
 
 ### 6.1 파이프라인 (서비스 개발 관점)
-![파이프라인](images/pipeline_sdp.png)
+![파이프라인](images/pipeline_sdp_service.png)
 
 ```
 ① 프론트엔드(내 담당)  (예) Streamlit 화면 8종
@@ -206,7 +206,7 @@ Mock을 쓰면 **첫날부터 마지막 날까지 개발 계획서 대로 작업
 ```
 
 ### 6.2 데이터베이스 구조도 (ERD)
-![ERD](images/erd_sdp.png)
+![ERD](images/erd_sdp_service.png)
 
 - **내가 만드는 테이블(4개)**: `users`, `payments`, `generations`, `waiting_copies`
 - **모델 담당 소유(3개)**: `market_cache`, `review_cache`, `banned_keywords`
@@ -365,8 +365,8 @@ marketing-ai/
 │
 ├── docs/
 │   ├── sdp_service.md           # 본 문서
-│   ├── erd_sdp.png              # ERD 다이어그램
-│   ├── pipeline_sdp.png         # 파이프라인 다이어그램
+│   ├── erd_sdp_service.png      # ERD 다이어그램
+│   ├── pipeline_sdp_service.png # 파이프라인 다이어그램
 │   └── api_contract.md          # ★ 모델 담당자와의 API 계약서
 │
 ├── docker-compose.yml
@@ -492,6 +492,6 @@ API 명세·DB 스키마 변경은 **GitHub Issue 또는 docs/에 즉시 기록*
 ## 부록 B. 참고 문서
 - 요구사항 명세서 v10 (`v10_sw_req_spec.md`)
 - 수정 스토리보드 (화면 시안)
-- 파이프라인 다이어그램 (`pipeline_sdp.png`)
-- ERD 다이어그램 (`erd_sdp.png`)
+- 파이프라인 다이어그램 (`pipeline_sdp_service.png`)
+- ERD 다이어그램 (`erd_sdp_service.png`)
 - API 계약서 (`docs/api_contract.md` — D1 작성 예정)
