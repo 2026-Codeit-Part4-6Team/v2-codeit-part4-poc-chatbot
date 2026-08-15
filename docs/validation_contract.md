@@ -1,9 +1,10 @@
 # 검증 함수 계약서 (Validation Contract) v1.0
 
-> **작성**: 전민재 PM · **작성일**: 2026-08-12
-> **파일 위치**: `docs/validation_contract.md` (단일 소스)
-> **구현 위치**: `validation/` (전민재 PM 관리 — 두 챗봇 담당자는 **import만**)
-> **연관 문서**: `docs/golden_dataset.md` · `docs/decisions.md` · API Contract v0.3
+- **작성자**: 전민재 PM 
+- **작성일**: 2026-08-12
+- **파일 위치**: `docs/validation_contract.md` (단일 소스)
+- **구현 위치**: `validation/` (전민재 PM 관리 — 두 챗봇 담당자는 **import만**)
+- **연관 문서**: `docs/golden_dataset.md` · `docs/decisions.md` · API Contract v0.3
 
 ---
 
@@ -17,7 +18,7 @@
 return {"action": "pass"/"warn"/"block", ...}   # ← 문자열 나눗셈
 ```
 
-**`import`는 통과하고 호출하는 순간 `TypeError`로 터졌다.** 명세표의 표기(`허용값: pass / warn / block`)를 코드에 그대로 옮긴 실수였다.
+**`import`는 통과하고 호출하는 순간 `TypeError` 발생했다.** 오류 원인은 명세표의 표기(`허용값: pass / warn / block`)를 코드에 그대로 옮겨서 발생한 실수였다.
 
 발견자는 검증 함수를 **쓰는 쪽**(컨설턴트 담당)이었다. 만드는 쪽은 몰랐고, 쓰는 쪽이 연결하다 알았다.
 
@@ -41,11 +42,11 @@ return {"action": "pass"/"warn"/"block", ...}   # ← 문자열 나눗셈
 | 구분 | 담당 | 내용 |
 | --- | --- | --- |
 | **함수 구현** | **전민재 PM** | `validation/` 4종 판정 로직 · 키워드 사전 · 규제 RAG |
-| **노드 래핑** | 각 챗봇 담당 | 함수를 LangGraph 노드로 감싸 그래프에 연결 |
+| **노드 래핑** | 각 챗봇 담당 | 함수를 LangGraph 노드로 감싸 그래프 연결 |
 | **판정 결과 전달** | 각 챗봇 담당 | 서비스 API 응답 형식으로 변환 |
 | **크레딧 롤백** | 서비스 개발 담당 | `blocked`·`error` 수신 시 차감분 되돌리기 |
 
-> ⚠️ **`validation/` 내부는 수정하지 않는다.** 필요하면 전민재 PM에게 요청한다.
+> ⚠️ **`validation/` 내부 로직은 담당자가 임의로 수정하지 않는다.** 필요하면 전민재 PM에게 요청한다.
 > 두 챗봇이 같은 파일을 쓰므로, 한쪽이 고치면 다른 쪽이 깨진다.
 
 ---
@@ -57,9 +58,9 @@ return {"action": "pass"/"warn"/"block", ...}   # ← 문자열 나눗셈
 ```
 [1층] 노드 내부 처리
       · pass  → 다음 노드로 진행
-      · warn  → 재생성 루프 또는 마스킹 (상한 내에서 자체 해결)
+      · warn  → 재생성 루프 또는 민감정보 마스킹 (상한 내에서 자체 해결)
       · block → 즉시 그래프 종료
-              ↓ 자체 해결에 실패했을 때만
+              ↓ 자체 해결 실패했을 때만
 [2층] 서비스 도달 (최종 응답)
       · status = "blocked" (단일값)
       · action = "block" | "reask" | "warn" (상세)
@@ -92,15 +93,15 @@ def check_regulation(copy: str) -> dict: ...
 def self_check(result: dict, context: dict) -> dict: ...
 ```
 
-| 함수 | 입력 | 검사 대상 | 파이프라인 위치 |
+| 함수 | 입력 | 유효성 검사 대상 | 파이프라인 위치 |
 | --- | --- | --- | --- |
 | `check_input` | 사용자 질문 | **입력** — 불법 키워드·프롬프트 인젝션 | 맨 앞 (LLM 호출 전) |
-| `check_regulation` | 생성된 카피 | **출력** — 표시광고법·식품표시광고법 | 카피 생성 직후 |
+| `check_regulation` | 생성된 카피 | **출력** — 표시광고법·식품표시광고법 등. | 카피 생성 직후 |
 | `check_output` | 최종 답변 | **출력** — 민감정보·시스템 프롬프트 누출 | 응답 직전 |
-| `self_check` | 결과 + 컨텍스트 | **품질** — 근거 유무·완결성 | 맨 끝 |
+| `self_check` | 결과 + 컨텍스트 | **품질** — LLM 모델 답변 근거 유무·완결성 | 맨 끝 |
 
-> **`check_input`만 "막는" 검사이고, 나머지는 "고쳐서 내보내는" 검사다.**
-> 그래서 `check_input`은 LLM 호출 **전**에 두어 비용을 0원으로 만든다.
+> **`check_input`만 "막는" 유효성 검사(Validation)이고, 나머지는 "고쳐서 내보내는" 유효성 검사(Validation)이다.**
+> 그래서 `check_input`은 LLM 모델 호출 **전**에 두어 유효성 검사 결과 입력된 데이터 올바르지 않은 경우 LLM 모델을 호출하지 않으므로 LLM 모델 API 호출 횟수 0회, 호출 비용을 0원으로 만든다.
 
 ---
 
@@ -135,7 +136,7 @@ def self_check(result: dict, context: dict) -> dict: ...
 | 필드 | 타입 | 필수 | Nullable | 설명 |
 | --- | --- | --- | --- | --- |
 | `action` | string | O | X | `pass` \| `warn` \| `block` |
-| `law` | string | O | X | 근거 조문. `pass`면 `""` |
+| `law` | string | O | X | 근거 법률 조문. `pass`면 `""` |
 | `reason` | string | O | X | 왜 문제인지. `pass`면 `""` |
 | `alternative` | string | O | X | **대안 문구**. `pass`면 `""` |
 | `message` | string | O | X | 사용자 안내. `pass`면 `""` |
@@ -161,7 +162,7 @@ def self_check(result: dict, context: dict) -> dict: ...
 | `message` | string | O | X | 사용자 안내. `pass`면 `""` |
 
 > ⚠️ **`self_check`만 세 번째 값이 `block`이 아니라 `reject`다.**
-> 보안·규제는 "막는다(block)"이고, 품질은 "되돌린다(reject)"라 의미가 다르다.
+> 보안·규제는 "막는다(block)"이고, 품질은 "되돌린다, 거절한다(reject)"라 의미가 다르다.
 
 ### 5.4 ⚠️ 절대 규칙 3가지
 
@@ -175,7 +176,7 @@ def self_check(result: dict, context: dict) -> dict: ...
    ❌ {"action":"pass"}                    ← 받는 쪽이 KeyError
 
 ③ 받는 쪽은 message를 직접 만들지 않는다
-   PM이 준 message를 그대로 사용자에게 전달한다
+   전민재 PM이 준 message를 그대로 사용자에게 전달한다
    → 안내 문구가 팀마다 달라지면 서비스 톤이 무너진다
 ```
 
@@ -183,7 +184,7 @@ def self_check(result: dict, context: dict) -> dict: ...
 
 ## 6. ★ action 값별 노드 처리 규칙
 
-> **이 표가 계약서의 본체다.** 노드를 만들 때 이대로 구현한다.
+> **이 표가 계약서의 본체다.** 검증 노드를 만들 때 이대로 구현한다.
 
 ### 6.1 `check_input` (보안1)
 
@@ -191,16 +192,16 @@ def self_check(result: dict, context: dict) -> dict: ...
 | --- | --- | --- | --- |
 | `pass` | 다음 노드로 진행 | — | — |
 | `warn` | **사용자에게 재질문 후 그래프 종료** | ✅ `status="blocked"`, `action="reask"` | **롤백** |
-| `block` | **즉시 종료. LLM 호출 0회** | ✅ `status="blocked"`, `action="block"` | **롤백** |
+| `block` | **즉시 종료. LLM 모델 API 호출 횟수 0회, 호출 비용 0원** | ✅ `status="blocked"`, `action="block"` | **롤백** |
 
-> **`block`에서 LLM을 부르지 않는 것이 핵심이다.** 여기서 막아야 비용이 0원이다.
+> **`block`에서 LLM 모델 API를 호출하지 않는 것이 핵심이다.** 여기서 막아야 호출 횟수 0회, 호출 비용이 0원이다.
 
-### 6.2 `check_regulation` (규제 검증)
+### 6.2 `check_regulation` (법률 규제 검증)
 
 | action | 노드가 할 일 | 서비스 도달 | 크레딧 |
 | --- | --- | --- | --- |
 | `pass` | 다음 노드로 진행 | — | 차감 유지 |
-| `warn` | **카피 생성으로 재생성 (상한 2회 — D-019)** | 상한 초과 시만 ✅ | 차감 유지 |
+| `warn` | **카피(문구) 생성으로 재생성 (상한 2회 — D-019)** | 상한 초과 시만 ✅ | 차감 유지 |
 | `block` | 즉시 종료 | ✅ `status="blocked"` | **롤백** |
 
 **재생성 루프 상세**
@@ -211,42 +212,42 @@ def self_check(result: dict, context: dict) -> dict: ...
    ↓ (2회차 재생성 — 상한)
 카피 생성 → check_regulation → warn
    ↓ 상한 초과
-서비스에 반환: status="blocked", action="warn",
-              law·reason·alternative 포함
+서비스 반환: status="blocked", action="warn",
+            law·reason·alternative 포함
 ```
 
-> **상한을 두는 이유**: 무한 재생성은 OpenAI $30 한도를 태운다.
-> 2회 초과 시 사용자에게 **대안 문구를 주고 판단을 넘긴다.**
+> **상한을 두는 이유**: 무한 재생성 기능 구현 및 실행 시 OpenAI $30 예산 한도를 조기 소진한다.
+> 2회 초과 시 사용자에게 **대안 문구를 주고 판단을 사용자에게 넘긴다.**
 
 ### 6.3 `check_output` (보안2)
 
 | action | 노드가 할 일 | 서비스 도달 | 크레딧 |
 | --- | --- | --- | --- |
 | `pass` | 다음 노드로 진행 | — | 차감 유지 |
-| `warn` | **해당 부분 마스킹 후 진행** | — | 차감 유지 |
+| `warn` | **해당 최종 답변 중 민감정보 마스킹 처리 후 진행** | — | 차감 유지 |
 | `block` | 즉시 종료 | ✅ `status="blocked"` | **롤백** |
 
-> `warn`은 *"전화번호가 노출됐다"* 같은 경우다. **답변 전체를 버릴 필요는 없고** 해당 부분만 가린다.
+> `warn`은 *"담당자 개인 전화번호가 노출됐다"* 같은 경우다. **최종 답변 전체를 버릴 필요는 없고** 해당 민감정보만 마스킹 처리해서 가린다.
 
 ### 6.4 `self_check` (답변 검증)
 
 | action | 노드가 할 일 | 서비스 도달 | 크레딧 |
 | --- | --- | --- | --- |
-| `pass` | 응답 반환 | — | 차감 유지 |
-| `warn` | **로그만 남기고 응답은 반환** | — | 차감 유지 |
+| `pass` | LLM 모델 응답(답변) 반환 | — | 차감 유지 |
+| `warn` | **로그만 남기고 LLM 모델 응답(답변) 반환** | — | 차감 유지 |
 | `reject` | **재생성 1회 → 실패 시 error** | 재시도 실패 시 ✅ | **롤백** |
 
-> `self_check`의 `warn`은 *"근거가 좀 약하다"* 수준이라 **사용자에게 보여줘도 된다.**
-> `reject`는 *"근거가 아예 없다"* 라 되돌린다.
+> `self_check`의 `warn`은 *"LLM 모델 응답(답변)의 근거가 좀 약하다"* 수준이라 **사용자에게 보여줘도 된다.**
+> `reject`는 *"근거가 아예 없다"* 라 되돌린다(거절한다).
 
 ---
 
-## 7. 크레딧 롤백 규칙 (서비스 개발 담당용)
+## 7. 크레딧 롤백 규칙 (서비스 개발 담당 전용)
 
-> 서비스는 **모델 호출 전에 크레딧을 차감**한다(서비스 SDP §6.5).
+> 서비스 핵심 비즈니스 로직은 **모델 호출 전에 크레딧을 차감**한다(서비스 SDP §6.5).
 > 따라서 아래 경우 **반드시 롤백**해야 한다. (S-11 · D-020 연계)
 
-| 모델 응답 | 크레딧 | 무료 횟수 | 근거 |
+| LLM 모델 응답 | 크레딧 | 무료 횟수 | 근거 |
 | --- | --- | --- | --- |
 | `status="ok"` (카피 1개 이상 성공) | **차감 유지** | 차감 유지 | D-020 |
 | `status="ok"` (이미지만 실패) | **차감 유지** | 차감 유지 | D-020 — 카피가 핵심 산출물 |
@@ -258,19 +259,20 @@ def self_check(result: dict, context: dict) -> dict: ...
 
 ---
 
-## 8. 노드 래핑 예시 (두 챗봇 담당자용)
+## 8. 노드 래핑 예시 (두 챗봇 담당자 전용)
 
-> **이대로 복사해서 쓰면 된다.** 함수 내부가 스텁이든 실구현이든 코드는 동일하다.
+> **두 챗봇 담당자 모두 이대로 복사해서 쓰면 된다.** 함수 내부가 스텁이든 실구현이든 코드는 동일하다.
 
 ### 8.1 보안1 노드
 
 ```python
 # models/basic/nodes/security_input.py
+# models/consult/nodes/security_input.py
 from validation.security import check_input
 
 
 def security_input_node(state: dict) -> dict:
-    """보안1 — PM의 check_input()을 그래프 노드로 감싼다."""
+    """보안1 — 전민재 PM이 구현한 check_input()을 그래프 노드로 감싼다."""
     verdict = check_input(state["question"])
 
     state.setdefault("validation", {})["input"] = verdict
@@ -293,7 +295,7 @@ def security_input_node(state: dict) -> dict:
     return state
 ```
 
-### 8.2 규제 검증 노드 (재생성 루프 포함)
+### 8.2 법률 규제 검증 노드 (재생성 루프 포함)
 
 ```python
 # models/basic/nodes/regulation_node.py
@@ -303,7 +305,7 @@ MAX_RETRY = 2   # D-019 재생성 상한
 
 
 def regulation_node(state: dict) -> dict:
-    """규제 검증 — warn이면 재생성, 상한 초과 시 대안과 함께 반환."""
+    """법률 규제 검증 — warn이면 재생성, 상한 초과 시 대안과 함께 반환."""
     copy_text = state["proposals"][0]["copy"]
     verdict = check_regulation(copy_text)
 
@@ -366,15 +368,15 @@ graph.add_conditional_edges("regulation", route_after_regulation)
 | `check_input` | 스텁(`pass`) | **8/12(D2)** | 실제 `block` 반환 시작 |
 | `check_regulation` 1단 | 스텁(`pass`) | **8/13(D3)** | 키워드 기반 `warn` 반환 시작 |
 | `check_output` | 스텁(`pass`) | **8/14(D4)** | 누출 탐지 시 `warn`/`block` |
-| `self_check` (A)규칙 | 스텁(`pass`) | **8/14(D4)** | 근거·개수 검사 시작 |
-| `check_regulation` 2단 RAG | 미구현 | **8/19(D7)** [SHOULD] | `law`·`alternative`가 조문 기반으로 채워짐 |
+| `self_check` (A)규칙 | 스텁(`pass`) | **8/14(D4)** | LLM 모델 답변 근거·개수 검사 시작 |
+| `check_regulation` 2단 RAG | 미구현 | **8/19(D7)** [SHOULD] | `law`·`alternative`가 법률 조문 기반으로 채워짐 |
 
 **전환 시 전민재 PM이 할 일**
 ```
 ① validation/ 내부만 수정
 ② 반환 형식은 그대로 유지 (필드 추가·삭제 금지)
 ③ 팀 채널에 "○○ 실구현 완료" 공지
-④ decisions.md 에 기록
+④ decisions.md 의사결정 로그 기록
 ```
 
 **전환 시 두 챗봇 담당자가 할 일**
@@ -441,7 +443,7 @@ uv run --locked --group dev ruff check . --fix
 | 골든 문항 | 검증 대상 함수 | 기대 `action` |
 | --- | --- | --- |
 | `R-001`~`R-003` (불법 품목) | `check_input` | `block` |
-| `R-004`~`R-005` (인젝션) | `check_input` | `block` |
+| `R-004`~`R-005` (프롬프트 인젝션) | `check_input` | `block` |
 | `R-006`~`R-008` (과장 표현) | `check_regulation` | `warn` + `alternative` |
 | `R-009`~`R-010` (의학 효능) | `check_regulation` | `warn` + `alternative` |
 | **`R-011`~`R-015` (과잉 차단 가드)** | `check_input`·`check_regulation` | **`pass`** |
@@ -461,7 +463,7 @@ uv run --locked --group dev ruff check . --fix
 
 ## 12. 서비스 API 계약과의 매핑
 
-> 노드가 만든 `state["blocked"]` 를 서비스 응답으로 어떻게 바꾸는지.
+> 검증 노드가 만든 `state["blocked"]` 를 서비스 응답으로 어떻게 바꾸는지.
 > API Contract v0.3 §6.5 기준.
 
 **모델 → 서비스 응답**
@@ -484,11 +486,11 @@ uv run --locked --group dev ruff check . --fix
 | `self_check` → `reject` (재시도 실패) | `error` | — |
 
 > **`self_check` 실패만 `error`인 이유**: 보안·규제는 *"의도적으로 막았다"* 이고,
-> 품질 실패는 *"만들지 못했다"* 라 성격이 다르다. HTTP 매핑도 달라진다.
+> 품질 실패는 *"LLM 모델 응답(답변) 만들지 못했다"* 라 성격이 다르다. HTTP 매핑도 달라진다.
 
 ---
 
-## 13. ⚠️ 받는 쪽이 하면 안 되는 것
+## 13. ⚠️ 받는 쪽이 하면 안 되는 것(기본/컨설턴트/서비스 개발 담당자 대상)
 
 ```
 ① validation/ 내부 파일을 수정한다
@@ -499,13 +501,13 @@ uv run --locked --group dev ruff check . --fix
    → "skip", "retry" 같은 값을 만들면 다른 챗봇과 규격이 어긋난다
 
 ③ message 를 직접 작성한다
-   → PM이 준 문구를 그대로 전달한다. 안내 톤이 팀마다 달라지면 안 된다
+   → 전민재 PM이 준 문구를 그대로 전달한다. 안내 톤이 팀마다 달라지면 안 된다
 
 ④ pass 가 아닌데 그냥 통과시킨다
    → 검증 함수를 붙인 의미가 사라진다. 스텁 기간에도 분기는 만들어 둔다
 
-⑤ 크레딧 롤백을 모델 쪽에서 처리한다
-   → 과금은 서비스 개발 담당 영역. 모델은 판정 결과만 정확히 전달한다
+⑤ 크레딧 롤백을 LLM 모델 쪽에서 처리한다
+   → 과금은 서비스 개발 담당 영역. LLM 모델은 판정 결과만 정확히 전달한다
 ```
 
 ---
@@ -523,7 +525,7 @@ uv run --locked --group dev ruff check . --fix
 ⑥ 팀 채널 공지 → 두 챗봇 담당자가 노드 확인
 ```
 
-> **④를 ⑤보다 먼저 하는 이유**: 테스트를 먼저 고치면 **구현이 계약을 어겼을 때 CI가 잡는다.**
+> **④를 ⑤보다 먼저 하는 이유**: 테스트를 먼저 고치면 **구현이 검증 함수 계약을 어겼을 때 CI가 잡는다.**
 
 ---
 
@@ -532,10 +534,17 @@ uv run --locked --group dev ruff check . --fix
 | ID | 항목 | 현재 기본안 | Owner | Due |
 | --- | --- | --- | --- | --- |
 | V-01 | `check_input` `warn` 시 재질문 UX | 그래프 종료 후 서비스가 재질문 화면 표시 | 전민재 PM | 8/14 |
-| V-02 | `check_output` `warn` 마스킹 방식 | 해당 부분을 `***` 로 치환 | 전민재 PM | 8/14 |
+| V-02 | `check_output` `warn` 민감정보 마스킹 방식 | 해당 민감정보 부분을 `***` 로 치환 | 전민재 PM | 8/14 |
 | V-03 | `self_check` `reject` 재시도 횟수 | **1회** | 전민재 PM | 8/14 |
 | V-04 | `check_regulation` 2단 RAG 전환 | 1주차 키워드 → 2주차 RAG [SHOULD] | 전민재 PM | 8/19 |
-| V-05 | `self_check` (B) 사실성 검증 | SHOULD, OpenAI 예산 여유 시 | 전민재 PM | 8/21 |
+| V-05 | `self_check` (B) LLM 모델 응답(답변) 사실성 검증 | SHOULD, OpenAI 예산 여유 시 | 전민재 PM | 8/21 |
+
+---
+
+## 참고 자료
+
+### 서비스 개발 계약 문서
+- 서비스 API/DB Contract v0.3 — [바로가기](https://app.notion.com/p/D1-API-DB-Contract-v0-3-3b9efe95f43b80938eaddafa09244fd3)
 
 ---
 
@@ -544,7 +553,7 @@ uv run --locked --group dev ruff check . --fix
 ```
 check_input      : pass | warn(→reask) | block
 check_regulation : pass | warn(→재생성 2회) | block
-check_output     : pass | warn(→마스킹) | block
+check_output     : pass | warn(→민감정보 마스킹) | block
 self_check       : pass | warn(→로그만) | reject(→재시도 1회)
 
 서비스 도달 시:
@@ -560,4 +569,4 @@ self_check       : pass | warn(→로그만) | reject(→재시도 1회)
 - 디렉토리 구조 (`docs/directory_structure.md`)
 - **골든 데이터셋 기준 문서** (`docs/golden_dataset.md`) — `R-` 15문항이 본 계약을 검증
 - 서비스 API/DB Contract v0.3 — §6.5 정책 검증 결과 · S-11 롤백
-- 4개 담당자 SDP (`docs/sdp_pm.md` / `sdp_service.md` / `sdp_basic.md` / `sdp_consult.md`)
+- 4개 담당자별 SDP 개발 계획서 (`docs/sdp_pm.md` / `sdp_service.md` / `sdp_basic.md` / `sdp_consult.md`)
