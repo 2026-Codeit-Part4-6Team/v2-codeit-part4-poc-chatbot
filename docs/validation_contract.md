@@ -1,6 +1,6 @@
-# 검증 함수 계약서 (Validation Contract) v1.0
+# 검증 함수 계약서 (Validation Contract) v1.1
 
-- **작성자**: 전민재 PM 
+- **작성자**: 전민재 PM
 - **작성일**: 2026-08-12
 - **파일 위치**: `docs/validation_contract.md` (단일 소스)
 - **구현 위치**: `validation/` (전민재 PM 관리 — 두 챗봇 담당자는 **import만**)
@@ -261,9 +261,44 @@ def self_check(result: dict, context: dict) -> dict: ...
 
 ## 8. 노드 래핑 예시 (두 챗봇 담당자 전용)
 
-> **두 챗봇 담당자 모두 이대로 복사해서 쓰면 된다.** 함수 내부가 스텁이든 실구현이든 코드는 동일하다.
+> 함수 내부가 스텁이든 실구현이든 **노드 코드는 동일하다.**
+> 아래 예시는 `models/basic/`·`models/consult/` 양쪽에 그대로 적용된다.
 
-### 8.1 보안1 노드
+### 8.0 ⚠️ 모든 검증 노드가 지키는 4가지
+
+```
+① 부분 업데이트만 반환한다 — state 를 제자리 수정하지 않고 통째로 반환하지 않는다
+   ✅ return {"validation": {...}}
+   ❌ state["x"] = 1; return state        ← 리듀서 중복 병합·병렬 덮어쓰기
+
+② validation 은 반드시 기존 값과 병합해서 반환한다
+   ✅ {"validation": {**state.get("validation", {}), "input": verdict}}
+   ❌ {"validation": {"input": verdict}}  ← 앞 노드 판정이 사라질 수 있다
+
+③ 차단 결과는 issues 리스트에 append 한다 (status 는 문자열 하나)
+   updates["issues"] = state.get("issues", []) + [{...}]
+
+④ 라우팅 신호로 새 키를 만들지 않는다
+   ❌ state["_goto"] = "copy_gen"          ← 스키마에 없는 키는 버려진다
+   ✅ status · validation · *_retry_count 등 선언된 필드로 라우터가 판단
+```
+
+**공통 상태 필드** (`models/shared/state_common.py`)
+
+| 필드 | 타입 | 용도 |
+| --- | --- | --- |
+| `status` | `"ok"` \| `"blocked"` \| `"error"` | 최종 상태 |
+| `issues` | `list[dict]` | `{source, action, reason, message}` 누적 |
+| `validation` | `dict` | 함수별 원본 판정 보관 |
+| `copy_retry_count` | `int` | 규제 재생성 카운터 (기본 챗봇) |
+| `self_check_retry_count` | `int` | self_check 재생성 카운터 |
+
+> ★ **재시도 카운터는 용도별로 분리한다.** 하나를 공유하면 규제 재생성이 카운터를
+> 소진해 self_check 재생성 기회가 사라진다.
+
+---
+
+### 8.1 보안1 노드 — 기본·컨설턴트 공통
 
 ```python
 # models/basic/nodes/security_input.py
@@ -272,89 +307,376 @@ from validation.security import check_input
 
 
 def security_input_node(state: dict) -> dict:
-    """보안1 — 전민재 PM이 구현한 check_input()을 그래프 노드로 감싼다."""
+    """보안1 — check_input() 을 그래프 노드로 감싼다.
+
+    block → 즉시 종료. 이 지점에서 막아야 LLM 호출 0회·비용 0원이다.
+    warn  → 정보 부족으로 보고 재질문(reask) 후 종료.
+    """
     verdict = check_input(state["question"])
+    updates: dict = {
+        "validation": {**state.get("validation", {}), "input": verdict}
+    }
 
-    state.setdefault("validation", {})["input"] = verdict
+    action = verdict["action"]
+    if action == "pass":
+        return updates
 
-    if verdict["action"] == "block":
-        state["status"] = "blocked"
-        state["blocked"] = {
-            "action": "block",
-            "reason": "illegal_or_injection",
+    # warn·block 모두 그래프를 끝낸다 — 서비스에는 action 으로 구분해 전달한다
+    updates["status"] = "blocked"
+    updates["issues"] = state.get("issues", []) + [
+        {
+            "source": "input",
+            "action": "block" if action == "block" else "reask",
+            "reason": "illegal_or_injection" if action == "block" else "need_clarification",
             "message": verdict["message"],
         }
-    elif verdict["action"] == "warn":
-        state["status"] = "blocked"
-        state["blocked"] = {
-            "action": "reask",
-            "reason": "need_clarification",
-            "message": verdict["message"],
-        }
-
-    return state
+    ]
+    return updates
 ```
 
-### 8.2 법률 규제 검증 노드 (재생성 루프 포함)
+---
+
+### 8.2 법률 규제검증 노드 — **기본 챗봇 전용** (§8.6 참조)
 
 ```python
 # models/basic/nodes/regulation_node.py
 from validation.regulation import check_regulation
 
-MAX_RETRY = 2   # D-019 재생성 상한
+MAX_COPY_RETRY = 2  # D-019 카피 재생성 상한
 
 
 def regulation_node(state: dict) -> dict:
-    """법률 규제 검증 — warn이면 재생성, 상한 초과 시 대안과 함께 반환."""
-    copy_text = state["proposals"][0]["copy"]
-    verdict = check_regulation(copy_text)
+    """법률 규제검증 — 카피 3안을 각각 판정한다.
 
-    state.setdefault("validation", {})["regulation"] = verdict
+    · pass·warn 카피는 그대로 살린다(warn 은 대안 제시가 목적이지 삭제가 아니다)
+    · block 카피는 배열에서 빼지 않고 error 슬롯으로 치환한다 (D-018·3안 고정)
+    · 살아남은 카피가 하나도 없을 때만 재생성 루프로 되돌린다
+    """
+    ranked = state.get("ranked_copies", [])
+    checked, verdicts = [], []
 
-    if verdict["action"] == "pass":
-        return state
+    for item in ranked:
+        copy_text = item.get("copy")
+        if not copy_text:                      # 이미 실패한 슬롯은 판정 대상이 아니다
+            checked.append(item)
+            verdicts.append(None)
+            continue
 
-    if verdict["action"] == "block":
-        state["status"] = "blocked"
-        state["blocked"] = {
-            "action": "block",
-            "reason": "prohibited_item",
-            "message": verdict["message"],
-        }
-        return state
+        verdict = check_regulation(copy_text)
+        verdicts.append(verdict)
 
-    # warn — 재생성 루프
-    retry = state.get("retry_count", 0)
-    if retry < MAX_RETRY:
-        state["retry_count"] = retry + 1
-        state["_goto"] = "copy_gen"          # 조건부 엣지가 읽는 값
-        return state
+        if verdict["action"] == "block":
+            checked.append({                   # ★ 자리를 비우지 않는다
+                "copy": None,
+                "image_b64": None,
+                "error": {
+                    "field": "copy",
+                    "reason": "content_policy",
+                    "message": verdict["message"],
+                },
+            })
+        else:
+            checked.append(item)               # pass·warn 은 유지
 
-    # 상한 초과 — 대안과 함께 서비스로 반환
-    state["status"] = "blocked"
-    state["blocked"] = {
-        "action": "warn",
-        "reason": "regulation_risk",
-        "law": verdict["law"],
-        "alternative": verdict["alternative"],
-        "message": verdict["message"],
+    updates: dict = {
+        "ranked_copies": checked,
+        "validation": {**state.get("validation", {}), "regulation": verdicts},
     }
-    return state
+
+    if any(c.get("copy") for c in checked):    # 하나라도 살아남음 → 통과
+        return updates
+
+    retry = state.get("copy_retry_count", 0)
+    if retry < MAX_COPY_RETRY:
+        updates["copy_retry_count"] = retry + 1
+        return updates                         # 라우터가 copy_gen 으로 되돌린다
+
+    # 상한 초과 — 대안(alternative)을 함께 주고 판단을 사용자에게 넘긴다
+    worst = next((v for v in verdicts if v and v["action"] != "pass"), None)
+    updates["status"] = "blocked"
+    updates["issues"] = state.get("issues", []) + [
+        {
+            "source": "regulation",
+            "action": worst["action"] if worst else "block",
+            "reason": "regulation_risk",
+            "law": worst["law"] if worst else "",
+            "alternative": worst["alternative"] if worst else "",
+            "message": worst["message"] if worst else "규제 검증을 통과하지 못했습니다.",
+        }
+    ]
+    return updates
 ```
 
-### 8.3 조건부 엣지 연결
+---
+
+### 8.3 보안2 노드 — 기본·컨설턴트
+
+> **warn 은 텍스트 전체를 버리지 않고 `masked_text` 로 교체한다**(V-02).
+> 마스킹 규칙은 `validation/` 이 소유한다 — 두 챗봇이 각자 정규식을 만들면
+> 가리는 범위가 달라진다(§13-③과 같은 이유).
+> `check_output` 은 키워드 매칭(LLM 0회)이라 **조각별로 여러 번 호출해도 비용이 없다.**
+
+**공통 본체**
+
+```python
+# models/basic/nodes/security_output.py
+# models/consult/nodes/security_output.py
+from validation.security import check_output
+
+
+def security_output_node(state: dict) -> dict:
+    """보안2 — 사용자에게 나갈 모든 텍스트 조각을 검증·마스킹한다."""
+    parts = _outbound_parts(state)             # [(경로, 텍스트), ...] — 챗봇별 구현
+    verdicts, replacements = {}, {}
+
+    for path, text in parts:
+        if not text:
+            continue
+        verdict = check_output(text)
+        verdicts[path] = verdict
+
+        if verdict["action"] == "block":
+            return {
+                "validation": {**state.get("validation", {}), "output": verdicts},
+                "status": "blocked",
+                "issues": state.get("issues", []) + [
+                    {
+                        "source": "output",
+                        "action": "block",
+                        "reason": "sensitive_leak",
+                        "message": verdict["message"],
+                    }
+                ],
+            }
+        if verdict["action"] == "warn":
+            replacements[path] = verdict["masked_text"]
+
+    updates: dict = {
+        "validation": {**state.get("validation", {}), "output": verdicts}
+    }
+    if replacements:
+        updates.update(_apply_mask(state, replacements))   # 챗봇별 구현
+    return updates
+```
+
+**기본 챗봇 — 검증 대상은 카피 3안**
+
+```python
+# models/basic/nodes/security_output.py
+def _outbound_parts(state: dict) -> list[tuple[str, str]]:
+    return [
+        (f"proposals[{i}]", c["copy"])
+        for i, c in enumerate(state.get("ranked_copies", []))
+        if c.get("copy")
+    ]
+
+
+def _apply_mask(state: dict, replacements: dict) -> dict:
+    ranked = [dict(c) for c in state.get("ranked_copies", [])]
+    for path, masked in replacements.items():
+        ranked[int(path[len("proposals["):-1])]["copy"] = masked
+    return {"ranked_copies": ranked}
+```
+
+**컨설턴트 — 검증 대상은 summary + actions + reasons (D-145)**
+
+```python
+# models/consult/nodes/security_output.py
+def _outbound_parts(state: dict) -> list[tuple[str, str]]:
+    result = state.get("result") or {}
+    parts = [("summary", result.get("summary", ""))]
+    parts += [(f"actions[{i}]", a["content"])
+              for i, a in enumerate(result.get("actions", []))]
+    parts += [(f"reasons[{i}]", r)
+              for i, r in enumerate(result.get("reasons", []))]
+    return parts
+
+
+def _apply_mask(state: dict, replacements: dict) -> dict:
+    result = state.get("result") or {}
+    masked = {
+        "summary": replacements.get("summary", result.get("summary", "")),
+        "actions": [
+            {**a, "content": replacements.get(f"actions[{i}]", a["content"])}
+            for i, a in enumerate(result.get("actions", []))
+        ],
+        "reasons": [
+            replacements.get(f"reasons[{i}]", r)
+            for i, r in enumerate(result.get("reasons", []))
+        ],
+    }
+    return {"result": masked}
+```
+
+> ⚠️ **`summary` 만 검증하면 안 된다.** `actions[].content` 와 `reasons[]` 도
+> 사용자 화면에 그대로 노출된다.
+
+---
+
+### 8.4 self_check 노드 — 기본·컨설턴트 공통
+
+```python
+# models/basic/nodes/self_check_node.py
+# models/consult/nodes/self_check_node.py
+import logging
+
+from validation.self_check import self_check
+
+logger = logging.getLogger(__name__)
+MAX_SELF_CHECK_RETRY = 1  # V-03 - LLM 모델 답변 검증 재시도 상한
+
+
+def self_check_node(state: dict) -> dict:
+    """self_check — LLM 모델 답변 근거 유무·완결성을 판정한다.
+
+    warn   → 로그만 남기고 그대로 반환한다(LLM 모델 답변 근거가 약할 뿐 보여줘도 된다).
+    reject → 생성 노드로 1회 되돌린다. 실패하면 status="error".
+    """
+    verdict = self_check(state.get("result") or {}, state.get("context") or {})
+    updates: dict = {
+        "validation": {**state.get("validation", {}), "self_check": verdict}
+    }
+
+    action = verdict["action"]
+    if action == "pass":
+        return updates
+
+    if action == "warn":
+        logger.info("self_check warn — LLM 모델 답변 근거가 약하지만 반환한다: %s", verdict["reasons"])
+        return updates
+
+    retry = state.get("self_check_retry_count", 0)
+    if retry < MAX_SELF_CHECK_RETRY:
+        updates["self_check_retry_count"] = retry + 1
+        return updates                         # 라우터가 생성 노드로 되돌린다
+
+    updates["status"] = "error"
+    updates["issues"] = state.get("issues", []) + [
+        {
+            "source": "self_check",
+            "action": "reject",
+            "reason": "unknown",               # ★ ErrorResult.reason enum 안에서 고른다
+            "message": verdict["message"],
+        }
+    ]
+    return updates
+```
+
+> ⚠️ **`reason` 은 API Contract v0.3 `ErrorResult` 의 4종
+> (`timeout`·`rate_limit`·`provider_error`·`unknown`) 중 하나여야 한다.**
+> `self_check_failed` 같은 값을 쓰면 서비스에서 검증 실패로 502가 난다.
+
+---
+
+### 8.5 조건부 엣지 연결
+
+> **`path_map`(세 번째 인자)은 필수다.** 라우터가 `END` 로 보내려면
+> `from langgraph.graph import END` 센티널을 매핑해야 한다 — `"END"` 문자열은 동작하지 않는다.
+
+**기본 챗봇**
 
 ```python
 # models/basic/graph/build_basic.py
+from langgraph.graph import END
+
+
+def route_after_security_input(state: dict) -> str:
+    return "end" if state.get("status") == "blocked" else "question_analysis"
+
+
 def route_after_regulation(state: dict) -> str:
-    if state.get("status") == "blocked":
-        return "END"
-    if state.get("_goto") == "copy_gen":
-        return "copy_gen"          # 재생성 루프
+    if state.get("status") in ("blocked", "error"):
+        return "end"
+    if not any(c.get("copy") for c in state.get("ranked_copies", [])):
+        return "copy_gen"                      # 재생성 루프
     return "image_gen"
 
 
-graph.add_conditional_edges("regulation", route_after_regulation)
+def route_after_self_check(state: dict) -> str:
+    if state.get("status") in ("blocked", "error"):
+        return "end"
+    verdict = (state.get("validation") or {}).get("self_check") or {}
+    return "copy_gen" if verdict.get("action") == "reject" else "end"
+
+
+graph.add_conditional_edges(
+    "security_input", route_after_security_input,
+    {"question_analysis": "question_analysis", "end": END},
+)
+graph.add_conditional_edges(
+    "regulation", route_after_regulation,
+    {"copy_gen": "copy_gen", "image_gen": "image_gen", "end": END},
+)
+graph.add_conditional_edges(
+    "self_check", route_after_self_check,
+    {"copy_gen": "copy_gen", "end": END},
+)
+```
+
+**컨설턴트 챗봇**
+
+```python
+# models/consult/graph/build_consultant.py
+from langgraph.graph import END
+
+
+def route_after_security_input(state: dict) -> str:
+    return "end" if state.get("status") == "blocked" else "question_analysis"
+
+
+def route_after_security_output(state: dict) -> str:
+    return "end" if state.get("status") == "blocked" else "self_check_node"
+
+
+def route_after_self_check(state: dict) -> str:
+    if state.get("status") in ("blocked", "error"):
+        return "end"
+    verdict = (state.get("validation") or {}).get("self_check") or {}
+    return "strategy" if verdict.get("action") == "reject" else "end"
+
+
+graph.add_conditional_edges(
+    "security_input", route_after_security_input,
+    {"question_analysis": "question_analysis", "end": END},
+)
+graph.add_conditional_edges(
+    "security_output", route_after_security_output,
+    {"self_check_node": "self_check_node", "end": END},
+)
+graph.add_conditional_edges(
+    "self_check_node", route_after_self_check,
+    {"strategy": "strategy", "end": END},
+)
+```
+
+> ⚠️ **재생성 루프는 사이클이다.** LangGraph 기본 `recursion_limit` 은 25이므로,
+> 재시도 상한(`MAX_COPY_RETRY`·`MAX_SELF_CHECK_RETRY`)을 반드시 지켜야
+> `GraphRecursionError` 로 끝나지 않는다.
+
+---
+
+### 8.6 챗봇별 감싸는 함수 — 왜 컨설턴트는 3종인가
+
+| 함수 | 기본 챗봇 | 컨설턴트 | 근거 |
+| --- | --- | --- | --- |
+| `check_input` | ✅ | ✅ | 사용자 질문은 양쪽 동일 |
+| `check_regulation` | ✅ | **❌ 미구현** | 아래 참조 |
+| `check_output` | ✅ | ✅ | 양쪽 다 사용자에게 텍스트가 나감 |
+| `self_check` | ✅ | ✅ | 양쪽 다 근거·완결성 필요 |
+
+**컨설턴트에 법률 규제검증 노드를 두지 않는 이유**
+
+```
+① §4 표 정의: check_regulation 의 입력은 "생성된 카피", 위치는 "카피 생성 직후".
+   컨설턴트는 카피를 만들지 않는다(전략 조언 = strategy.summary·actions·reasons).
+② 표시광고법은 "광고"에 적용된다. 컨설팅 조언 자체는 광고가 아니다.
+③ 컨설턴트 전략이 광고가 되는 경로는 [이 전략으로 광고 만들기](link_to_ads) 하나뿐이고,
+   그 결과물은 source_gen_id 로 기본 챗봇 파이프라인을 타면서 regulation_node 를 통과한다.
+④ 붙이면 warn 시 전략 재생성 루프가 생겨 LLM 호출이 늘고 $30 예산을 압박한다.
+
+단, 컨설턴트가 "이 지역 최고 카페로 포지셔닝하세요" 같은 표현을 낼 수 있으므로
+strategy SYSTEM_PROMPT 에 아래 한 줄을 둔다(호출 0회·노드 0개):
+  "'최고'·'유일'·'1등' 같은 근거 없는 최상급 표현과 질병 예방·치료 효능 표현은 쓰지 않는다."
 ```
 
 ---
