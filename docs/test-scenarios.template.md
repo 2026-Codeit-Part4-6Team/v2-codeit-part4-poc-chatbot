@@ -4,10 +4,10 @@
 > 단위 테스트 700여 개가 전부 초록불이어도, 구간을 이어붙이면 오류 발생하는 지점이 있다.
 > 이 문서는 그 지점을 찾기 위한 **사용자 여정** 목록이다.
 >
-> **관리**: 전민재 PM 
-> **작성일**: 2026-08-24 
-> **버전**: v1.0
-> **참고**: `docs/decisions.md` · `docs/validation_contract.md` · API/DB Contract v0.4
+- **관리**: 전민재 PM 
+- **작성일**: 2026-08-24 
+- **버전**: v1.0
+- **참고**: `docs/decisions.md` · `docs/validation_contract.md` · API/DB Contract v0.4
 
 ---
 
