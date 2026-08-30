@@ -463,7 +463,6 @@ codeit-part4-6team-project/
 - [최종 발표 자료](reports/final_presentation.pdf)
 - [E2E 1회차 테스트 자료](https://app.notion.com/p/3b5efe95f43b80749aced13d0e08444b)
 - [E2E 2회차 테스트 자료](https://app.notion.com/p/E2E-2-3caefe95f43b80eab598e4782cb903ce)
-- [FastAPI 문서](http://localhost:18000/docs)
 
 ### 외부 API
 
