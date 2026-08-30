@@ -367,7 +367,7 @@ codeit-part4-6team-project/
 - [검증 함수 최종 보고서](reports/validation_report.md)
 - [서비스 최종 보고서](reports/service_report.md)
 - [최종 프로젝트 보고서](reports/final_report.md)
-- [최종 발표 자료](https://docs.google.com/presentation/d/17Ph0xPN5LjkD7aCnjQlvCrmfDKEVtIDT/edit?usp=drive_link&ouid=109915726870377847422&rtpof=true&sd=true)
+- [최종 발표 자료](reports/final_presentation.pdf)
 - [E2E 1회차 테스트 자료](https://app.notion.com/p/3b5efe95f43b80749aced13d0e08444b)
 - [E2E 2회차 테스트 자료](https://app.notion.com/p/E2E-2-3caefe95f43b80eab598e4782cb903ce)
 - [FastAPI 문서](http://localhost:18000/docs)
