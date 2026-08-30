@@ -140,7 +140,7 @@
 
 ## 4.2 전체 시스템 아키텍처
 
-![전체 시스템 아키텍처](<최종_보고서/assets/01_system_architecture.svg>)
+![전체 시스템 아키텍처](<../assets/01_system_architecture.png>)
 
 *그림 2. Frontend, Service, Basic·Consultant 모델, 검증 계층, 저장소와 외부 API의 연결 구조.*
 
@@ -331,7 +331,7 @@ Consultant와 Validation은 fixture와 데이터셋 버전을 기록했다. Judg
 
 ## 6.1 통합 결과 요약
 
-![통합 결과 대시보드](<최종_보고서/assets/06_results_dashboard.svg>)
+![통합 결과 대시보드](<../assets/06_results_dashboard.png>)
 
 *그림 9. 서로 다른 데이터셋의 점수를 합산하지 않고 영역별 대표 지표를 분리한 결과 요약.*
 
