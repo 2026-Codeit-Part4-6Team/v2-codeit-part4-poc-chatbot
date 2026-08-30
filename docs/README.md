@@ -59,7 +59,10 @@ GitHub README 반영 전 확인할 것.
 
 ## ✨ 주요 기능
 
-### 카피니 - 기본 챗봇
+<details>
+<summary><strong>카피니 - 기본 챗봇</strong></summary>
+
+![기본 챗봇 광고 문구와 이미지 3안](images/basic_3_proposals.png)
 
 - 인스타그램·X-배너 광고 문구 3안 생성
 - 생성 결과 랭킹과 플랫폼별 형식 변환
@@ -68,9 +71,12 @@ GitHub README 반영 전 확인할 것.
 - 규제·출력·사실성 검증
 - 결과 승인·재사용·다시 만들기
 
-![기본 챗봇 광고 문구와 이미지 3안](images/basic_3_proposals.png)
+</details>
 
-### 분석이 - 컨설턴트 챗봇
+<details>
+<summary><strong>분석이 - 컨설턴트 챗봇</strong></summary>
+
+![이 전략으로 광고 만들기](images/link_to_ads.png)
 
 - 소상공인시장진흥공단 OpenAPI 기반 주변 상권 분석
 - 구체적인 상품·메뉴가 있을 때만 검색 트렌드 조회
@@ -80,7 +86,7 @@ GitHub README 반영 전 확인할 것.
 - 후속 상담을 위한 추천 질문 3개 생성
 - 컨설팅 결과를 기본 챗봇의 광고 생성으로 연결
 
-![이 전략으로 광고 만들기](images/link_to_ads.png)
+</details>
 
 ### 검증과 서비스 기능
 
