@@ -427,44 +427,44 @@
 1. baseline (gpt-image-1)
     
     
-    ![proposal_1.jpg](proposal_1.jpg)
+    ![proposal_1.jpg](../images/proposal_1.jpg)
     
-    ![proposal_3.jpg](proposal_3.jpg)
+    ![proposal_3.jpg](../images/proposal_3.jpg)
     
-    ![proposal_2.jpg](proposal_2.jpg)
+    ![proposal_2.jpg](../images/proposal_2.jpg)
     
     별도 텍스트 처리 없이 그대로 생성했다. 이미지 3장 전부에 한글 배너 문구가 직접 그려졌는데, 텍스트가 깨져서 생성된다. 
     
 2. 텍스트·로고·브랜드명 생성 금지 지시 추가 (gpt-image-1)
     
     
-    ![$R0NMFMH.jpg](R0NMFMH.jpg)
+    ![$R0NMFMH.jpg](../images/R0NMFMH.jpg)
     
-    ![$RPSMYHD.jpg](RPSMYHD.jpg)
+    ![$RPSMYHD.jpg](../images/RPSMYHD.jpg)
     
-    ![$R67EDZF.jpg](R67EDZF.jpg)
+    ![$R67EDZF.jpg](../images/R67EDZF.jpg)
     
     프롬프트에 텍스트·로고·브랜드명을 생성하지 말라는 지시를 추가했다. 그 결과 3장 중 2장은 사진 자체는 깨끗해졌지만 컵에 영문 브랜드명이 남았고, 1장은 여전히 한글 문구가 깨진 채 남아있었다. 프롬프트 지시만으로는 텍스트를 완전히 배제할 수 없다는 한계를 확인했고 광고 이미지에 텍스트를 아예 제외시킬 수 없다는 문제가 있다. 
     
 3. 텍스트 생성 제외 + PIL 합성 (gpt-image-1)
     
     
-    ![proposal_1.jpg](proposal_1%201.jpg)
+    ![proposal_1.jpg](../images/proposal_1%201.jpg)
     
-    ![proposal_2.jpg](proposal_2%201.jpg)
+    ![proposal_2.jpg](../images/proposal_2%201.jpg)
     
-    ![proposal_3.jpg](proposal_3%201.jpg)
+    ![proposal_3.jpg](../images/proposal_3%201.jpg)
     
     프롬프트에서 텍스트 생성 자체를 완전히 제외하고, PIL로 Noto Sans KR 폰트를 이용해 짧은 문구를 반투명 배너와 함께 별도로 합성하는 방식으로 전환했다. 그러나 합성한 문구가 잘리고 이미지와 어울리지 않는 새로운 문제가 나타났다.
     
 4. 모델 교체 + PIL 합성 제외 (gpt-image-2)
     
     
-    ![proposal_1.jpg](proposal_1%202.jpg)
+    ![proposal_1.jpg](../images/proposal_1%202.jpg)
     
-    ![proposal_2.jpg](proposal_2%202.jpg)
+    ![proposal_2.jpg](../images/proposal_2%202.jpg)
     
-    ![proposal_3.jpg](proposal_3%202.jpg)
+    ![proposal_3.jpg](../images/proposal_3%202.jpg)
     
     모델을 gpt-image-2로 교체하고, 프롬프트에서 텍스트 생성 제외 지시와 PIL 별도 합성 방식을 모두 걷어냈다. 텍스트가 깨지거나 잘리지 않는 안정적인 결과물을 얻어 최종 방식으로 채택했다.
     
