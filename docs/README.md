@@ -100,6 +100,22 @@ GitHub README 반영 전 확인할 것.
 ![매출부스터 전체 시스템 아키텍처](assets/01_system_architecture.png)
 
 <details>
+<summary><strong>카피니 - 기본 챗봇 파이프라인</strong></summary>
+
+카피니 - 기봇 챗봇은 LangGraph 기반의 상태 그래프 파이프라인을 채택하여 구축했다. 이 방식은 파이프라인의 각 단계를 노드로 정의하고 단계 간의 흐름을 조건부 엣지로 연결하여 제어한다. 이를 통해 챗봇의 핵심 로직인 검증 게이트의 판단 흐름과 규제 위반 시 발생하는 재시도 루프 구조를 그래프 아키텍처 내에 명시적으로 표현하고 안정적으로 제어할 수 있다. 
+
+카피니 - 기본 챗봇의 전체 흐름은 아래와 같이 크게 네 구간으로 나뉜다. 
+
+1. 입력 단계 - 입력 검증(security_input) 후 질문 분석(question_analysis)에서 정보 충분성 판정을 하고, 정보가 부족하면 재질문(reask)으로 종료한다. 
+2. 컨텍스트 수집 단계 - 채널 확정(channel) 후 상권 요약(market_for_copy), 트렌드 요약(trend_for_copy), 벤치마크 요약(benchmark), 계절정보 힌트(seasonality_for_copy)를 순서대로 채운다.
+3. 생성 및 검증 단계 - 카피 생성(copy_gen) → 랭킹(ranking, LLM Judge) → 규제 검증(regulation)을 거치며, 규제 위반 시 재시도 상한(2회) 내에서 카피 생성(copy_gen)으로 되돌아가는 루프가 있다. 이후 이미지 생성(image_gen) → 이미지 검수(image_review)에서도 디코딩 전부 실패 시 재시도 상한(2회) 내에서 카피 생성(copy_gen)으로 되돌아가는 루프가 있다. 
+4. 출력 단계 - 채널 리포맷(channel_format)으로 서비스 응답 형태를 조립하고, 출력 검증(security_output) → 최종 검증(self_check)을 통과하면 그래프가 종료된다. 각 검증 게이트(security_input, security_output, self_check)는 위반 시 즉시 종료로 빠지는 별도 경로를 가진다. 
+
+![카피니 - 기본 챗봇 파이프라인](../images/image.png)
+
+</details>
+
+<details>
 <summary><strong>분석이 - 컨설턴트 챗봇 파이프라인</strong></summary>
 
 질문 분석 후 상권·트렌드·계절성·추천 질문 노드를 동시에 실행하고, 결과를 전략 생성 단계에서 합칩니다. 상권과 트렌드는 캐시를 먼저 확인하고 데이터가 없을 때만 외부 API를 호출합니다.
