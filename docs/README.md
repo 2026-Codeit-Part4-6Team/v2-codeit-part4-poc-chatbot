@@ -173,31 +173,89 @@ cp .env.example .env
 `.env` 를 열어 아래 값을 채웁니다. **실제 키는 커밋하지 않습니다.**
 
 ```bash
-# ── 실행 환경 ──────────────────────────────
-APP_ENV=demo                      # development | test | demo | production
-CHATBOT_MODE=actual               # mock | actual  ← 실제 모델을 쓰려면 actual
+FRONTEND_BIND_ADDRESS=0.0.0.0
+FRONTEND_PORT=8501
+BACKEND_BIND_ADDRESS=127.0.0.1
+BACKEND_PORT=18000
+BACKEND_URL=http://backend:8000
+APP_ENV=development
+# 데모 계정 seed는 로컬/시연 환경에서만 켭니다. 운영에서는 반드시 false로 둡니다.
+DEMO_ACCOUNTS_ENABLED=false
+# 결제는 현재 provider=pending 모의 처리입니다. production에서는 반드시 false로 둡니다.
+DEMO_PAYMENT_ENABLED=true
+DEMO_INITIAL_CREDITS=20000
+# 실제 데모 비밀번호는 커밋하지 말고 로컬 .env에서만 입력합니다.
+DEMO_ACCOUNT_PASSWORD=
+# 역할별 비밀번호가 필요하면 공통값보다 우선합니다(값은 로컬에서만 입력).
+# DEMO_PM_PASSWORD=
+# DEMO_BASIC_PASSWORD=
+# DEMO_CONSULTANT_PASSWORD=
+# DEMO_SERVICE_PASSWORD=
+APP_DATA_DIR=/srv/team6/data
 
-# ── 모델 ──────────────────────────────────
-OPENAI_API_KEY=                   # 필수
-OPENAI_MODEL=gpt-4o-mini
-LLM_TEMPERATURE=0.3
+# 소상공인시장진흥공단 상권정보 OpenAPI 인증키(디코딩 키)
+MARKET_API_KEY=
 
-# ── 외부 데이터 API ────────────────────────
-MARKET_API_KEY=                   # 소상공인시장진흥공단 상권정보 (디코딩 키)
-NAVER_CLIENT_ID=                  # 네이버 검색어 트렌드
+# NAVER API HUB 검색어 트렌드 API 인증 — X-NCP-APIGW-API-KEY-ID / X-NCP-APIGW-API-KEY 헤더로 사용
+NAVER_CLIENT_ID=
 NAVER_CLIENT_SECRET=
-NAVER_MAPS_API_KEY_ID=            # 네이버 지도 (회원가입 지오코딩)
+
+# 네이버 검색광고(Search Ad) API 인증 — get_trend()의 related(연관 검색어) 채우는 용도, 발급되면 채울 것
+NAVER_AD_API_KEY=
+NAVER_AD_SECRET_KEY=
+NAVER_AD_CUSTOMER_ID=
+DATABASE_URL=sqlite:///./data/app.db
+DAILY_FREE_LIMIT=10
+BASIC_CREDIT_COST=50
+CONSULTANT_CREDIT_COST=10
+MODEL_REQUEST_TIMEOUT_SECONDS=180
+MODEL_THREAD_POOL_WORKERS=2
+# 모델 timeout(180초) 이후 정상 지연을 허용하므로 240초로 설정합니다.
+STALE_RECOVERY_SECONDS=240
+# 배포 VM에서는 CHATBOT_MODE=actual로 설정
+CHATBOT_MODE=mock
+MAX_APPROVED_IMAGE_BYTES=5242880
+SESSION_SECRET_KEY=change-this-in-real-environments
+SESSION_MAX_AGE_SECONDS=28800
+SESSION_COOKIE_SECURE=false
+NAVER_MAPS_API_KEY_ID=
 NAVER_MAPS_API_KEY=
+GEOCODE_FALLBACK_ENABLED=false
+GEOCODE_FALLBACK_LAT=37.4979
+GEOCODE_FALLBACK_LNG=127.0276
 
-# ── 검증 계층 ──────────────────────────────
-VALIDATION_RAG_ENABLED=1
+# ── HTTP 시연 VM override ─────────────────────────────────────────────
+# 배포 VM의 비공개 .env에서 아래 값을 적용합니다(이 파일에 실비밀번호·API 키를 넣지 않습니다).
+# APP_ENV=demo
+# CHATBOT_MODE=actual
+# GEOCODE_FALLBACK_ENABLED=true
+# DEMO_PAYMENT_ENABLED=true
+# DEMO_ACCOUNTS_ENABLED=true  # 비밀번호를 채운 뒤에만 활성화
+
+# 실제 모델 호출 인증
+OPENAI_API_KEY=
+
+# 모델 실험용 override (미설정 시 models/shared/config.py 기본값 사용)
+OPENAI_MODEL=
+OPENAI_BASE_URL=
+LLM_TEMPERATURE=
+# LLM Judge 전용 모델 — 미설정 시 OPENAI_MODEL 과 동일(D-251)
+OPENAI_JUDGE_MODEL=
+
+# 검증 함수 LLM Judge 전용 모델
+VALIDATION_JUDGE_MODEL=
+# 검증 함수 전용 TOP_K
 VALIDATION_TOP_K=3
+VALIDATION_DYNAMIC_TOP_K=0
+VALIDATION_MAX_TOP_K=3
+VALIDATION_RAG_ENABLED=1
 VALIDATION_REQUIRE_LEGAL_KB=1
+VALIDATION_MIN_KB_CHUNKS=30
 
-# ── 요금 정책 ──────────────────────────────
-DAILY_FREE_LIMIT=10               # 일일 무료 생성 횟수
-BASIC_CREDIT_COST=50              # 광고 생성 1회
-CONSULTANT_CREDIT_COST=10         # 컨설팅 1회
+# Hugging Face 인증/캐시 — HF_TOKEN 값은 VM의 실제 .env에만 입력합니다.
+HF_TOKEN=
+HF_HOME=/app/.cache/huggingface
+HF_HOME_HOST_PATH=/srv/team6/models
 ```
 
 ### 4) 지식베이스·인덱스 빌드
@@ -268,51 +326,83 @@ uv run python -m models.shared.eval.compare_reports <before.json> <after.json>
 ## 5. 📂 프로젝트 구조
 
 ```
-codeit-part4-6team-project/
-├── backend/                    # FastAPI — 인증 · 생성 · 결제 · 이력
-│   ├── routers/                #   HTTP 엔드포인트
-│   ├── services/               #   생성 유스케이스 · 크레딧 차감/롤백
-│   ├── clients/                #   챗봇 클라이언트 (mock / actual)
-│   ├── schemas.py              #   ★ 서비스 ↔ 모델 계약 (ModelRequest/ModelResult)
-│   └── demo_seed.py            #   시연용 계정 seed
+sales-booster/
 │
-├── frontend/                   # React 18 + Vite — 화면 8종
-│   └── src/
-│       ├── features/generation/#   생성 흐름 (Estimate → 동의 → 대기 → 결과 → 승인)
-│       ├── components/         #   대시보드 · 마이페이지 · 설정
-│       └── contract.ts         #   ★ 프론트 ↔ 서비스 payload 계약
+├── validation/                        # ★★ [유효성 검증]
 │
-├── models/
-│   ├── basic/                  # 카피니 — LangGraph 15노드
-│   │   ├── graph/              #   상태 정의 · 그래프 조립
-│   │   ├── nodes/              #   카피 생성 · 랭킹 · 법률 규제 · 이미지 · 검수
-│   │   └── eval/               #   생성·이미지·검색 평가기
-│   ├── consult/                # 분석이 — LangGraph 9노드
-│   │   ├── nodes/              #   질문분석 · 상권 · 트렌드 · 계절성 · 전략
-│   │   └── eval/               #   전략 평가기 (60문항)
-│   └── shared/                 # 두 챗봇 공용 (LLM 호출 · 계절성 · 평가 유틸)
+├── cache/                             # ★★ [마켓/트렌드/리뷰 캐시]
 │
-├── validation/                 # ★ 공용 검증 계층 — 두 챗봇이 import
-│   ├── regulation.py           #   check_regulation (1단 키워드 + 2단 RAG)
-│   ├── security.py             #   check_input · check_output
-│   ├── self_check.py           #   self_check
-│   ├── legal_retriever.py      #   법령 KB 벡터 검색
-│   └── eval/                   #   3계층 지표 계산기
+├── shared_data/                       # ★ [공유 데이터]
 │
-├── cache/                      # 상권·트렌드 Cache-Aside (TTL 7일)
-├── shared_data/                # 골든 데이터셋 · 법령 KB · 업종코드 맵
-├── tests/                      # 서비스 계층 테스트
-├── docs/                       # 설계 문서 · 계약서 · 보고서 · E2E 결과서
-├── compose.yaml                # 로컬 개발
-├── compose.deploy.yaml         # GCP 배포
-└── scripts/deploy.sh           # 배포 스크립트
+├── backend/                           # ★★ [백엔드 전체]
+│   ├── main.py                        # FastAPI 앱 조립 · 라우터 등록 · CORS
+|   |
+│   ├── routers/                       # ★ API 라우터 (서비스 개발 담당)
+│   │
+│   ├── services/                      # ★ 비즈니스 로직
+│   │
+│   └── clients/                       # ★ 모델 담당 연동부 (계약 경계)
+│
+├── frontend/                          # ★ React UI
+│
+├── models/                            # ★★★ [모델]
+│   │
+│   ├── shared/                        # ★ [모델 공용]
+│   │
+│   ├── basic/                         # ★★ 카피니 - 기본 챗봇(게시물 생성)
+│   │   ├── main.py                    # 챗봇 진입점 (서비스 개발 담당자가 호출)
+|   |   |
+│   │   ├── graph/                     # ★ LangGraph 골격
+│   │   │
+│   │   ├── nodes/                     # ★ 노드
+│   │   │
+│   │   ├── clients/                   # ★ 외부 연동부 (교체 가능하게 분리)
+│   │   │
+│   │   ├── retrieval/                 # 벤치마크 RAG (인덱싱·검색)
+│   │   │
+│   │   ├── scripts/                   # ★ 배치 스크립트
+│   │   │
+│   │   ├── eval/                      # ★ 평가
+│   │   │
+│   │   └── tests/                     # ★ 테스트
+│   │
+│   └── consult/                       # ★★ 분석이 - 컨설턴트 챗봇
+│       ├── main.py                    # 챗봇 진입점 (서비스 개발 담당자가 호출)
+│       │
+│       ├── graph/                     # ★ LangGraph 골격
+│       │
+│       ├── nodes/                     # ★ 노드
+│       │
+│       ├── clients/                   # ★ 외부 API 호출부 (Cache-Aside의 '미스' 경로)
+│       │
+│       ├── analysis/                  # 컨설팅 분석 유틸
+│       │
+│       ├── scripts/                   # ★ 배치 스크립트
+│       │
+│       ├── eval/                      # ★ 평가
+│       │
+│       └── tests/                     # ★ 테스트
+│
+├── scripts/                           # ★ 전민재 PM 배치 스크립트 (루트)
+│
+├── tests/                             # ★ 루트 테스트 — 서비스 개발 담당 + 전민재 PM
+│                                      #   ※ 모델 테스트는 각 models/*/tests/ 에 위치
+│
+├── docs/                              # ★ 팀 공용 문서 — 한 곳에 모음
+│   │                                  #   ※ 흩어져 있으면 못 찾으므로 루트로 통합
+|   └── templates/                     # 템플릿 문서
+│
+├── docker-compose.yml                 # [서비스] 로컬 통합 실행
+├── .env.example                       # [서비스] 환경변수 템플릿
+├── requirements.txt / pyproject.toml (uv)   # 루트 공통 의존성
+└── README.md                          # 프로젝트 최상위 안내
 ```
 
 ---
 
 ## 6. 📊 성능 측정 결과
 
-### 검증 계층 — 골든 데이터셋 67문항
+### 검증 계층
 
 | 지표 | 목표 | 결과 | 판정 |
 | --- | --- | --- | --- |
@@ -325,7 +415,7 @@ codeit-part4-6team-project/
 
 > **RAGAS 미달은 트레이드오프의 결과입니다.** `context_recall` 1.000, `faithfulness` 1.000인데 `context_precision` 0.3871이 종합을 끌어내렸습니다. top-k=3 고정 구조에서 정답 조문이 1개인 문항의 precision 상한은 0.333입니다. 동적 top-k로 바꾸면 precision은 오르지만 **과잉 차단이 8.3% → 25%로 악화**되어 채택하지 않았습니다.
 
-### 컨설턴트 챗봇 — 골든 60문항
+### [분석이] 컨설턴트 챗봇
 
 | 지표 | 결과 |
 | --- | --- |
@@ -337,15 +427,13 @@ codeit-part4-6team-project/
 | 응답시간 P50 / P95 | 5.20초 / 6.97초 |
 | I/O 구간 응답시간 | 2.87초 → **1.64초** (4-way 병렬화, 42.8% 감소) |
 
-### 기본 챗봇 — 프롬프트 18라운드
+### [카피니] 기본 챗봇
 
 | 지표 | Baseline | 최종 채택 | 변화 |
 | --- | --- | --- | --- |
 | LLM Judge 평균 | 4.66 | **4.72** | +0.06 |
 | 구체성 | 3.86 | **4.07** | +0.21 |
 | X-배너 가독성 | 4.13 | **4.60** | +0.47 |
-
-> **7차 프롬프트는 롤백했습니다.** 금지어를 늘릴수록 카피가 밋밋해졌고, 위반은 줄지 않는데 구체성만 떨어졌습니다. 방어는 프롬프트가 아니라 **사후 검증**에 맡기기로 했습니다.
 
 ### E2E 테스트 — 43 시나리오 · 2회 실행
 
@@ -377,12 +465,11 @@ codeit-part4-6team-project/
 
 | 기간 | 마일스톤 | 주요 산출물 |
 | --- | --- | --- |
-| D1 | 설계·계약 확정 | 개발 계획서(SDP) 4종 · 인터페이스 계약 · Mock 응답 형식 |
-| D2~D3 | 데이터 계층 | 상권·트렌드 API 연동 · Cache-Aside · 법령 KB |
-| D4~D6 | 파이프라인 구현 | LangGraph 그래프 · 검증 함수 4종 · 화면 8종 |
-| D7 | 실제 모델 연동 | Mock → Actual 교체 |
-| D8~D10 | 평가·튜닝 | 골든 데이터셋 측정 · 프롬프트 18라운드 · UI 개선 |
-| 최종 | 검증·배포 | E2E 2회차 · GCP 배포 · 발표 |
+| 1주차 | 서비스 기획·개발 환경 구축 | 개발 계획서(SDP) 4종 · 인터페이스 계약 · Mock 응답 형식 |
+| 2주차 | 단위 테스트 기능 구현·담당자별 보고서 초안 작성 | LLM·이미지 생성 모델 연동 · 상권·트렌드·검색광고·날씨 외부 API 연동 · Cache-Aside · 법령 KB |
+| 3주차 | 파이프라인 구현 및 단위 기능 고도화 | LangGraph 그래프 · 검증 함수 4종 · 화면 8종 |
+| 4주차 | E2E 1·2차 테스트 진행 및 문서 작업 | E2E 테스트 시나리오, 결과서, 최종 보고서, 최종 발표 PPT 문서, 발표 스크립트  |
+| 최종 | 배포·발표 | GCP 배포 · 프로젝트 최종 발표 |
 
 ---
 
@@ -393,12 +480,12 @@ codeit-part4-6team-project/
 | [팀 최종 보고서](docs/reports/팀_최종_프로젝트_보고서.md) | 전체 설계·측정·한계 (7절 구성) |
 | [검증 함수 보고서](docs/reports/validation_최종_보고서.md) | 검증 4종 설계·구현·3계층 평가 |
 | [기본 챗봇 보고서](docs/reports/Basic_Model_최종보고서_v2.md) | 카피니 파이프라인·프롬프트 튜닝 |
-| [컨설턴트 보고서](docs/reports/컨설턴트_챗봇_최종_보고서.md) | 분석이 파이프라인·60문항 측정 |
+| [컨설턴트 챗봇 보고서](docs/reports/컨설턴트_챗봇_최종_보고서.md) | 분석이 파이프라인·60문항 측정 |
 | [서비스 개발 보고서](docs/reports/서비스_개발_최종보고서.md) | 서비스·인프라·배포 |
-| [검증 함수 계약서](docs/validation_contract.md) | 4종 반환 계약·챗봇별 연결 |
-| [골든 데이터셋 규격](docs/golden_dataset.md) | 문항 설계·평가 실행 규칙 |
+| [검증 함수 계약서](docs/validation_contract.md) | 검증 함수 4종 반환 계약·챗봇별 연결 |
+| [골든 데이터셋 기준 문서](docs/golden_dataset.md) | 문항 설계·평가 실행 규칙 |
 | [E2E 테스트 결과서](docs/e2e_reports/) | 43 시나리오 · 2회차 실행 결과 |
-| [의사결정 로그](docs/decisions.md) | 판단과 근거 613건 |
+| [의사결정 로그](docs/decisions.md) | 판단과 근거 로그 기록 |
 
 ---
 
@@ -439,8 +526,8 @@ codeit-part4-6team-project/
 
 <div align="center">
 
-**코드잇 스프린트 AI 엔지니어 10기 파트4**
+**코드잇 스프린트 AI 엔지니어 10기**
 
-이 저장소는 6팀 프로젝트 산출물입니다.
+이 저장소는 파트4 6팀 프로젝트 산출물입니다.
 
 </div>
