@@ -38,7 +38,7 @@
 3. 생성 및 검증 단계 - 카피 생성(copy_gen) → 랭킹(ranking, LLM Judge) → 규제 검증(regulation)을 거치며, 규제 위반 시 재시도 상한(2회) 내에서 카피 생성(copy_gen)으로 되돌아가는 루프가 있다. 이후 이미지 생성(image_gen) → 이미지 검수(image_review)에서도 디코딩 전부 실패 시 재시도 상한(2회) 내에서 카피 생성(copy_gen)으로 되돌아가는 루프가 있다. 
 4. 출력 단계 - 채널 리포맷(channel_format)으로 서비스 응답 형태를 조립하고, 출력 검증(security_output) → 최종 검증(self_check)을 통과하면 그래프가 종료된다. 각 검증 게이트(security_input, security_output, self_check)는 위반 시 즉시 종료로 빠지는 별도 경로를 가진다. 
 
-![image.png](images/image.png)
+![image.png](../images/image.png)
 
 ### 2.2 노드 단위 구현 및 검증
 
@@ -477,39 +477,39 @@
 1. 가로형 배너의 비율을 1536×1024로 조정한다. 
 ```
 
-![image.png](images/image%201.png)
+![image.png](../images/image%201.png)
 
 ```
 2. 왼쪽 배경/오른쪽 피사체로 두장의 이미지를 생성하여 이어 붙인다. 
 ```
 
-![image.png](images/image%202.png)
+![image.png](../images/image%202.png)
 
 ```
 3. 스타일을 사진에서 그래픽 포스터로 변경하고 1536×1024 이미지 한장을 생성하여 가장자리를 늘린다. 
 ```
 
-![image.png](images/image%203.png)
+![image.png](../images/image%203.png)
 
 ```
 4. 이미지 한 장을 생성하고 아웃페인팅 API 호출 방식으로 가장자리를 채운다. 
 ```
 
-![image.png](images/image%204.png)
+![image.png](../images/image%204.png)
 
 ```
 4. 이미지 한 장을 생성하고 아웃페인팅 API 호출 방식으로 가장자리를 채운다. 
 ```
 
-![image.png](images/image%204.png)
+![image.png](../images/image%204.png)
 
 ```
 5. 상단과 하단 이미지 두장을 생성하여 합성한다. 주어지지 않은 정보는 포함하지 않고, 하단 이미지에 관련 없는 타 브랜드 광고가 생성되지 않도록 지시한다. 
 ```
 
-![vbanner_top.png](images/vbanner_top.png)
+![vbanner_top.png](../images/vbanner_top.png)
 
-![vbanner_bottom.png](images/vbanner_bottom.png)
+![vbanner_bottom.png](../images/vbanner_bottom.png)
 
 ### 3.4 LLM Judge 재현성 검증
 
@@ -698,37 +698,37 @@
 
 baseline 산출물
 
-![B-014_0.png](images/B-014_0.png)
+![B-014_0.png](../images/B-014_0.png)
 
-![B-014_1.png](images/B-014_1.png)
+![B-014_1.png](../images/B-014_1.png)
 
-![B-014_2.png](images/B-014_2.png)
+![B-014_2.png](../images/B-014_2.png)
 
-![B-002_0.png](images/B-002_0.png)
+![B-002_0.png](../images/B-002_0.png)
 
-![B-002_1.png](images/B-002_1.png)
+![B-002_1.png](../images/B-002_1.png)
 
-![B-002_2.png](images/B-002_2.png)
+![B-002_2.png](../images/B-002_2.png)
 
 7차 프롬프트 튜닝 산출물
 
-![B-065_0.png](images/B-065_0.png)
+![B-065_0.png](../images/B-065_0.png)
 
-![B-065_1.png](images/B-065_1.png)
+![B-065_1.png](../images/B-065_1.png)
 
-![B-065_2.png](images/B-065_2.png)
+![B-065_2.png](../images/B-065_2.png)
 
-![B-002_0.png](images/B-002_0%201.png)
+![B-002_0.png](../images/B-002_0%201.png)
 
-![B-002_1.png](images/B-002_1%201.png)
+![B-002_1.png](../images/B-002_1%201.png)
 
-![B-002_2.png](images/B-002_2%201.png)
+![B-002_2.png](../images/B-002_2%201.png)
 
 ## 5. Discussion - 결과 해석과 한계
 
 ### 5.1 텍스트 카피 평가 라운드별 결과 분석
 
-![image.png](images/image%205.png)
+![image.png](../images/image%205.png)
 
  이번 튜닝 과정에서 두 가지 패턴이 뚜렷하게 나타났다.
 
@@ -740,9 +740,9 @@ baseline 산출물
 
 ### 5.2 이미지 카피 평가 라운드별 결과 분석
 
-![image.png](images/image%206.png)
+![image.png](../images/image%206.png)
 
-![image.png](images/image%207.png)
+![image.png](../images/image%207.png)
 
  이미지와 배너 튜닝에서도 텍스트 카피와 동일한 패턴이 반복됐다. 프롬프트에 "하지 마라"는 부정 지시를 추가하는 방식은 이미지 생성 모델에서도 거의 통하지 않았다. 1차에서 상단과 하단 문구를 반복하지 말라는 지시를 추가했지만, 2차 측정에서는 오히려 15장 중 14장에서 중복이 재현됐다. 배너 세부사항 반영 단계에서는 세부정보가 없는 문항의 하단 정보란을 임의로 채우는 문제가 나타났는데, 재사용 금지 문장을 추가해도 형태만 바뀐 채 계속 재발했다. 7차에서는 아예 정확한 항목 개수를 숫자로 못박는 방식으로 전환했지만, 그마저도 이미지 생성 모델이 그대로 무시했다. 텍스트 지시만으로 특정 패턴을 막으려는 시도가 여러 형태로 반복됐지만 끝내 안정적으로 통하지 않았다.
 
