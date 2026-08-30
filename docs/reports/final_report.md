@@ -182,9 +182,9 @@ Idempotency-Key와 요청 해시는 네트워크 재전송으로 같은 요청�
 
 | 가게 정보 등록 | 생성 전 예상 사용량 확인 |
 | --- | --- |
-| ![가게 정보 등록과 지도 확인](<최종_보고서/최종보고서_images/회원가입화면.webp>) | ![질문 입력과 Credit 동의](<최종_보고서/최종보고서_images/질문입력+크레딧동의.webp>) |
+| ![가게 정보 등록과 지도 확인](<최종_보고서/최종보고서_images/signup_store_registration.png>) | ![질문 입력과 Credit 동의](<최종_보고서/최종보고서_images/generate_credit_consent.png>) |
 | 불법 품목 생성 차단 | 생성 결과 이력 조회 |
-| ![불법 품목 생성 차단](<최종_보고서/최종보고서_images/생성_차단_화면.webp>) | ![생성 결과 이력](<최종_보고서/최종보고서_images/생성이력화면.webp>) |
+| ![불법 품목 생성 차단](<최종_보고서/최종보고서_images/generate_blocked_prohibited_item.png>) | ![생성 결과 이력](<최종_보고서/최종보고서_images/mypage_generation_history.png>) |
 
 *그림 3. 가게 등록, 예상 사용량 동의, 차단 안내, 생성 이력으로 이어지는 서비스 주요 화면.*
 
@@ -235,7 +235,7 @@ Idempotency-Key와 요청 해시는 네트워크 재전송으로 같은 요청�
 
 | 컨설팅 결과와 광고 연계 버튼 | 연계 후 기본 챗봇 광고 결과 |
 | --- | --- |
-| ![컨설팅 결과와 광고 연계 버튼](<../images/link_to_ads.png>) | ![연계 후 광고 결과 3안](<최종_보고서/최종보고서_images/광고_연계_생성화면.webp>) |
+| ![컨설팅 결과와 광고 연계 버튼](<../images/link_to_ads.png>) | ![연계 후 광고 결과 3안](<최종_보고서/최종보고서_images/generate_result_from_strategy.png>) |
 
 *그림 7. 컨설팅 결과를 `source_context`로 전달해 기본 챗봇 광고 생성으로 연결한 화면. 생성 내용의 모범 사례가 아니라 두 챗봇의 연계 동작을 보여준다.*
 
