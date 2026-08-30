@@ -88,7 +88,8 @@ GitHub README 반영 전 확인할 것.
 
 </details>
 
-### 검증과 서비스 기능
+<details>
+<summary><strong>검증과 서비스 기능</strong></summary>
 
 | 영역 | 기능 |
 | --- | --- |
@@ -98,6 +99,8 @@ GitHub README 반영 전 확인할 것.
 | Self-check | 생성 결과의 근거와 완결성 확인 |
 | 사용량·크레딧 | 무료 사용량 우선 적용, 크레딧 차감 및 실패 시 롤백 |
 | 생성 이력 | 생성 결과 저장·조회·재사용 |
+
+</details>
 
 ---
 
