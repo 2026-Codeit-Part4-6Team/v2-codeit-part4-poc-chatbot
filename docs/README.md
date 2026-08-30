@@ -317,29 +317,29 @@ Mock 모드는 별도 API 키 없이 실행할 수 있습니다. 실제 모델�
 
 API 키를 저장소에 커밋하지 않습니다. 전체 환경변수와 기본값은 [`.env.example`](.env.example)을 확인합니다.
 
-### 서비스 실행
-
-```bash
-docker compose up -d --build
-docker compose logs -f
-```
-
-| 서비스 | 주소 |
-| --- | --- |
-| 프론트엔드 | http://localhost:8501 |
-| 백엔드 헬스체크 | http://localhost:18000/health |
-| FastAPI 문서 | http://localhost:18000/docs |
-
-```bash
-docker compose down
-```
-
 </details>
 
 <details>
-<summary><strong>테스트와 린트 실행하기</strong></summary>
+<summary><strong>서비스 실행 명령어 모음</strong></summary>
 
-### Python
+서비스를 로컬에서 실행하거나 GCP 데모 환경을 점검할 때 사용하는 명령어입니다.
+API 키, 비밀번호, 세션 키 등 실제 비밀값은 저장소에 기록하지 않습니다.
+
+## 로컬 실행
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+docker compose ps
+curl http://127.0.0.1:18000/health
+docker compose logs --tail=200
+docker compose down
+```
+
+프론트엔드는 `http://127.0.0.1:8501`, 백엔드 API 문서는
+`http://127.0.0.1:18000/docs`에서 확인합니다.
+
+## 테스트
 
 ```bash
 uv sync --locked --all-groups
@@ -347,14 +347,70 @@ uv run --locked --all-groups pytest
 uv run --locked --group dev ruff check .
 ```
 
-### Frontend
+### 실제 모델 경계 점검
+
+실제 Basic·Consultant 모델을 통합한 환경에서 E2E를 시작하기 전에 1회 실행합니다.
+API 비용과 모델 가중치 다운로드가 발생할 수 있으므로 일반 PR CI에서는 실행하지 않습니다.
 
 ```bash
-cd frontend
-pnpm install --frozen-lockfile
-pnpm test
-pnpm run build
+RUN_MODEL_BOUNDARY_SMOKE=1 uv run --locked --all-groups \
+  pytest tests/integration/test_d7_model_boundary.py -q
 ```
+
+## GCP 데모 환경
+
+배포 VM의 앱 경로는 `/srv/team6/app`이며, 실제 환경 파일은 해당 경로의 `.env`에서만 관리합니다.
+
+```bash
+cd /srv/team6/app
+
+docker compose -p team6-app \
+  --env-file .env \
+  -f compose.deploy.yaml up -d --wait --wait-timeout 180
+
+docker compose -p team6-app \
+  -f compose.deploy.yaml ps
+
+docker compose -p team6-app \
+  -f compose.deploy.yaml logs --tail=200
+
+curl http://127.0.0.1:18000/health
+```
+
+기본 포트는 프론트엔드 `8501`, 백엔드 `18000`입니다. 컨테이너 내부 백엔드 포트는 `8000`이며,
+프론트엔드는 Compose 네트워크의 `http://backend:8000`을 사용합니다.
+
+## 데모 계정
+
+`--topup`은 기존 생성 이력을 보존하고 데모 계정의 크레딧만 보충합니다.
+
+```bash
+docker compose -p team6-app \
+  --env-file .env \
+  -f compose.deploy.yaml exec -T backend \
+  python -m backend.demo_seed --topup
+```
+
+`--reset`은 데모 계정과 관련 생성 이력·결제 이력을 삭제한 뒤 다시 만듭니다.
+이력이 필요한 시연 전에는 사용하지 않습니다.
+
+```bash
+docker compose -p team6-app \
+  --env-file .env \
+  -f compose.deploy.yaml exec -T backend \
+  python -m backend.demo_seed --reset
+```
+
+## CD 수동 실행
+
+`main`에 병합된 커밋을 수동 배포할 때 GitHub Actions에서 실행합니다.
+
+```bash
+gh workflow run deploy.yml --ref main -f confirm_deploy=true
+gh run watch
+```
+
+배포 후에는 GCP VM에서 `ps`, `logs`, `/health` 순서로 컨테이너 상태를 확인합니다.
 
 </details>
 
