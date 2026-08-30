@@ -22,7 +22,7 @@
 
 <div align="center">
 
-[![매출부스터 시연 영상](docs/assets/thumbnail.png)](https://www.youtube.com/watch?v=N4SLRAgrLik)
+[![매출부스터 시연 영상](assets/thumbnail.png)](https://www.youtube.com/watch?v=N4SLRAgrLik)
 
 **▶️ 이미지를 클릭하면 유튜브로 이동합니다**
 
@@ -121,33 +121,7 @@
 
 ## 3. 🏗 시스템 아키텍처
 
-```
-                              사용자
-                                │
-                    ┌───────────▼───────────┐
-                    │  React + FastAPI      │  화면 8종 · 인증 · 크레딧 차감/롤백
-                    │  SQLite               │  생성 이력 · 상태 전이
-                    └───────────┬───────────┘
-                                │ POST /generate
-                ┌───────────────┴───────────────┐
-                ▼                               ▼
-     ┌────────────────────┐          ┌────────────────────┐
-     │  카피니 (기본)       │          │  분석이 (컨설턴트)   │
-     │  LangGraph 15노드   │◀─────────│  LangGraph 9노드    │
-     │  카피 3안 + 이미지   │ 서비스 경유 │  4-way 병렬 조회    │
-     └─────────┬──────────┘          └──────────┬─────────┘
-               │                                │
-               └────────────┬───────────────────┘
-                            ▼
-              ┌──────────────────────────────┐
-              │  공용 검증 계층 (validation/)  │
-              │  check_input · check_regulation │
-              │  check_output · self_check      │
-              │  법령 KB 36청크 · 골든 67문항    │
-              └──────────────┬───────────────┘
-                             ▼
-                   검증을 통과한 결과만
-```
+![시스템 아키텍처](images/pipeline_overview.png)
 
 ### `check_regulation` — 2단 구조
 
