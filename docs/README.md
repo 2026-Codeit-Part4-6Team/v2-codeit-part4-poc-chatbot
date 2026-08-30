@@ -75,9 +75,9 @@
 
 | 항목 | 내용 |
 | --- | --- |
-| **의사결정 근거 확보** | 감이 아니라 반경 내 동일 업종 수·검색 추이로 판단 |
-| **제작 시간 단축** | 문구 3안 + 채널별 이미지를 한 번의 요청으로 |
-| **법적 위험 감소** | 위반 문구를 차단하고 바로 쓸 수 있는 대안을 제시 |
+| **의사결정 근거 확보** | 반경 내 동일 업종 수·검색 추이로 판단 |
+| **제작 시간 단축** | 문구 3안 + 채널별 이미지를 한 번의 요청으로 생성 |
+| **법적 위험 감소** | 위반 문구를 차단하고 바로 쓸 수 있는 대안 제시 |
 
 ---
 
@@ -94,10 +94,10 @@
 
 ### 카피니 — 기본 챗봇
 
-전략이나 요청을 받아 광고 문구와 이미지를 만듭니다.
+전략이나 요청을 받아 광고 문구와 이미지를 생성합니다.
 
 - 톤이 다른 **광고 문구 3안 동시 생성** → LLM Judge 랭킹
-- **규제 검증을 이미지 생성 앞에 배치** — 위반 문구로 이미지를 만들지 않는다
+- **법률 규제 검증을 이미지 생성 앞에 배치** — 위반 문구로 이미지를 만들지 않는다
 - Instagram(정사각) / X-배너(세로형 상하단 합성) 채널별 대응
 
 ### 공용 검증 계층
@@ -127,17 +127,20 @@
 
 ```
 카피 입력
-   ├─[1단] 키워드 스크리닝 ── 명백한 위반은 LLM 호출 0회로 즉시 차단
-   │         └ 애매하면 ↓
-   └─[2단] 벡터 검색(top-k=3) → LLM 판정(temperature 0)
-             └ 검색된 조문만 근거로 사용 → 조문을 지어내지 않는다
+   │
+   ├─[1단] 키워드 스크리닝 ─── 명백한 위반 패턴 매칭 (LLM 0회)
+   │         │
+   │         ├─ 확실한 위반 → 즉시 block, 법률 조문·대안 반환
+   │         └─ 애매함 ─────┐
+   │                        ▼
+   └─[2단] 벡터 검색 (text-embedding-3-small, top-k=3)
+             │              KB 36청크에서 관련 법률 조문 검색
+             ▼
+           LLM 판정 (gpt-5.4-mini, temperature 0)
+             │   검색된 법률 조문만 근거로 사용 — 조문을 지어내지 않는다
+             ▼
+           action ∈ {pass, warn, block} + law + alternative
 ```
-
-**LLM 출력을 그대로 믿지 않는 3중 안전장치**
-
-1. 조문 번호(`law`)는 LLM 값을 버리고 **KB에서 직접 복사** — 실측 24건 중 3건이 불일치
-2. `block` 정규화 — 불법 품목 근거가 있을 때만 차단으로 인정
-3. 생성된 대안을 **재검사** — 또 걸리면 폐기
 
 ---
 
@@ -148,7 +151,7 @@
 | 항목 | 버전 |
 | --- | --- |
 | Python | 3.11 (3.12 미만) |
-| Node.js | 20 이상 |
+| React | 18 |
 | Docker / Docker Compose | 최신 |
 | [uv](https://docs.astral.sh/uv/) | 0.11.32 |
 
@@ -282,7 +285,7 @@ codeit-part4-6team-project/
 ├── models/
 │   ├── basic/                  # 카피니 — LangGraph 15노드
 │   │   ├── graph/              #   상태 정의 · 그래프 조립
-│   │   ├── nodes/              #   카피 생성 · 랭킹 · 규제 · 이미지 · 검수
+│   │   ├── nodes/              #   카피 생성 · 랭킹 · 법률 규제 · 이미지 · 검수
 │   │   └── eval/               #   생성·이미지·검색 평가기
 │   ├── consult/                # 분석이 — LangGraph 9노드
 │   │   ├── nodes/              #   질문분석 · 상권 · 트렌드 · 계절성 · 전략
@@ -355,8 +358,6 @@ codeit-part4-6team-project/
 
 ## 7. 👥 팀 소개
 
-<div align="center">
-
 | 역할 | 이름 | 담당 |
 | :---: | :---: | --- |
 | **PM · 검증** | **전민재** | 검증 함수 4종 · 법령 RAG · 골든 데이터셋 · 일정·예산 조율 |
@@ -364,12 +365,10 @@ codeit-part4-6team-project/
 | **컨설턴트 챗봇** | **김재헌** | 분석이 파이프라인 · 상권·트렌드 연동 · 전략 평가 |
 | **서비스 · 인프라** | **윤승준** | React · FastAPI · DB · 크레딧 정책 · CI/CD · 배포 |
 
-</div>
-
 ### 협업 방식
 
-- **계약 우선** — 인터페이스(`backend/schemas.py`·`contract.ts`)를 먼저 고정하고 Mock으로 병렬 개발
-- **의사결정 로그** — 판단과 근거를 `docs/decisions.md` 에 613건 기록
+- **계약 우선** — 인터페이스(`backend/schemas.py`·`contract.ts`)를 먼저 고정하고 목(Mock)과 스텁(Stub)으로 기능 테스트 및 병렬 개발
+- **의사결정 로그** — 판단과 근거를 `docs/decisions.md` 에 로그 기록
 - **PR 리뷰** — 전 PR 리뷰 필수, 머지 순서와 리베이스를 로그로 관리
 
 ---
@@ -378,7 +377,7 @@ codeit-part4-6team-project/
 
 | 기간 | 마일스톤 | 주요 산출물 |
 | --- | --- | --- |
-| D1 | 설계·계약 확정 | SDP 4종 · 인터페이스 계약 · Mock 응답 형식 |
+| D1 | 설계·계약 확정 | 개발 계획서(SDP) 4종 · 인터페이스 계약 · Mock 응답 형식 |
 | D2~D3 | 데이터 계층 | 상권·트렌드 API 연동 · Cache-Aside · 법령 KB |
 | D4~D6 | 파이프라인 구현 | LangGraph 그래프 · 검증 함수 4종 · 화면 8종 |
 | D7 | 실제 모델 연동 | Mock → Actual 교체 |
@@ -430,26 +429,18 @@ codeit-part4-6team-project/
 
 | 출처 | 용도 |
 | --- | --- |
-| [소상공인시장진흥공단 상권정보](https://www.data.go.kr/) | 반경 내 상가업소 · 업종코드 기반 판정 |
-| [네이버 검색어 트렌드](https://developers.naver.com/) | 검색 추이 · 연관 검색어 |
-| [네이버 지도](https://www.ncloud.com/product/applicationService/maps) | 회원가입 주소 지오코딩 |
-| 표시광고법 · 식품표시광고법 | 법령 KB 36청크 |
-
-### 알려진 한계
-
-| 항목 | 내용 |
-| --- | --- |
-| **이미지 내 텍스트 미검증** | `check_regulation`은 카피 문자열만 본다. 이미지에 박힌 문구는 검증 범위 밖 — OCR 기반 검증이 후속 과제 |
-| **판정 재현성** | `temperature=0`이 완전한 재현성을 보장하지 않는다. 5회 반복 중 1문항에서 판정이 갈림 |
-| **KB 커버리지** | 도달 가능한 34조문에 대해 100%. 2개 조문은 트리거 우선순위가 겹쳐 구조적으로 검색 1위가 되지 않음 |
-| **X-배너 비율** | 이미지 모델 최대 1.5:1 제약으로 1:3 배너를 두 장 합성으로 우회 |
+| [소상공인시장진흥공단 상권정보](https://www.data.go.kr/tcs/dss/selectApiDataDetailView.do?publicDataPk=15012005) | 반경 내 상가업소 · 업종코드 기반 판정 |
+| [네이버 검색어 트렌드](https://api.ncloud-docs.com/docs/naver-api-hub-search-trend) | 검색 추이 · 연관 검색어 |
+| [네이버 검색광고](https://naver.github.io/searchad-apidoc/#/guides) | 검색어 연관 광고 |
+| [네이버 지도](https://api.ncloud-docs.com/docs/application-maps-geocoding) | 회원가입 주소 지오코딩 |
+| [표시광고법](https://www.law.go.kr/lsSc.do?section=&menuId=1&subMenuId=15&tabMenuId=81&eventGubun=060101&query=%ED%91%9C%EC%8B%9C%EA%B4%91%EA%B3%A0%EB%B2%95#undefined) · [식품표시광고법](https://www.law.go.kr/LSW/lsSc.do?section=&menuId=1&subMenuId=15&tabMenuId=81&eventGubun=060101&query=%EC%8B%9D%ED%92%88%ED%91%9C%EC%8B%9C%EA%B4%91%EA%B3%A0%EB%B2%95#undefined) | 법령 KB 36청크 |
 
 ---
 
 <div align="center">
 
-**코드잇 스프린트 AI 엔지니어 10기 · 파트4 6팀**
+**코드잇 스프린트 AI 엔지니어 10기 파트4**
 
-이 저장소는 교육 과정의 팀 프로젝트 산출물입니다.
+이 저장소는 6팀 프로젝트 산출물입니다.
 
 </div>
