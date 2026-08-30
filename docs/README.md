@@ -128,6 +128,8 @@ GitHub README 반영 전 확인할 것.
 
 ## 📊 평가 결과
 
+![매출부스터 평가 결과 대시보드](assets/06_results_dashboard.png)
+
 <details>
 <summary><strong>카피니 - 기본 챗봇 60문항</strong></summary>
 
@@ -227,8 +229,6 @@ LLM Judge 점수만 높이는 것보다 서비스에서 사용할 수 있는 응
 > **RAGAS 미달은 트레이드오프의 결과입니다.** `context_recall` 1.000, `faithfulness` 1.000인데 `context_precision` 0.3871이 종합을 끌어내렸습니다. top-k=3 고정 구조에서 정답 조문이 1개인 문항의 precision 상한은 0.333입니다. 동적 top-k로 바꾸면 precision은 오르지만 **과잉 차단이 8.3% → 25%로 악화**되어 채택하지 않았습니다.
 
 </details>
-
-![매출부스터 평가 결과 대시보드](assets/06_results_dashboard.png)
 
 ---
 
