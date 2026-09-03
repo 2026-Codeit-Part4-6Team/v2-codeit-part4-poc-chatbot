@@ -19,7 +19,7 @@ LangGraph 기반 **Agentic-RAG** 파이프라인으로 소상공인의 광고 �
 
 ## 파이프라인
 
-![챗봇 파이프라인](reports/poc_pipeline.png)
+![챗봇 파이프라인](docs/assets/poc_pipeline.png)
 
 ---
 
